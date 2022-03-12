@@ -33,6 +33,24 @@ class LayoutFromFile(BaseEnvironment):
     self.pt_per_day = 100
     self.toCarbonEffcy = 0.5
     self.toGDPEffcy = 0.5
-  
+    
+    self.agric = 100.
+    self.energy = 100.
+    assert self.starting_agent_coin >= 0.0
+    
+    def generate_observations(self):
+      return []
+    
+    def reset_starting_layout(self):
+      self.agric = 100.
+      self.energy = 100.
+    
+    def scenario_step(self):
+      self.agric += 1
+      self.energy += 1
+      
+    def compute_reward(self):
+      return 0
+    
   #参考 foundation\scenarios\simple_wood_and_stone\layout_from_file.py
   
