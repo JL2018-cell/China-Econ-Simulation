@@ -2,16 +2,15 @@ from foundation.entities.resources import Resource, resource_registry
 from foundation.base.base_component import BaseComponent, component_registry
 from foundation.base.base_env import BaseEnvironment, scenario_registry
 from foundation.base.base_agent import BaseAgent, agent_registry
+from foundation.scenarios.MacroEcon.layout import MacroEconLayout
 import foundation
 
-#Experimenting, will be discarded finally.
 @resource_registry.add
 class Widget(Resource):
     name = "Widget"
     color = [1, 1, 1]
     collectible = False # <--- Goes in agent inventory, but not in the world
 
-#Experimenting, will be discarded finally.
 @component_registry.add
 class BuyWidgetFromVirtualStore(BaseComponent):
     name = "BuyWidgetFromVirtualStore"
@@ -29,7 +28,6 @@ class BuyWidgetFromVirtualStore(BaseComponent):
         self.available_widget_units = 0
         self.widget_price = 5
 
-#Experimenting, will be discarded finally.
 def get_n_actions(self, agent_cls_name):
     # This component adds 1 binary action that mobile agents can take: buy widget (or not).
     if agent_cls_name == "BasicMobileAgent":
@@ -37,7 +35,6 @@ def get_n_actions(self, agent_cls_name):
 
     return None
 
-#Experimenting, will be discarded finally.
 def generate_masks(self, completions=0):
     masks = {}
     # Mobile agents' buy action is masked if they cannot build with their
@@ -66,12 +63,35 @@ new_agn_cls = agent_registry.get("GuangDong")
 print(new_agn_cls)
 print(dir(new_cmp_cls))
 
+
+
 env_config = {
-    'scenario_name': 'layout_from_file/MacroEcon'
+    'scenario_name': 'layout/MacroEcon'
     #to be contnued after layout construction on foundation/scenarios/MacroEcon.
 }
 
+print("MacroEconLayout:", MacroEconLayout)
+
+test_env_cls = scenario_registry.get("layout/MacroEcon")
+print("scenario_registry.get:", test_env_cls)
+
 env = foundation.make_env_instance(**env_config)
+"""
+Traceback (most recent call last):
+  File "tt.py", line 74, in <module>
+    env = foundation.make_env_instance(**env_config)
+  File "D:\Tools\ai_ChinaEcon_v2\foundation\__init__.py", line 18, in make_env_instance
+    return scenario_class(**kwargs)
+TypeError: Can't instantiate abstract class LayoutFromFile with abstract methods compute_reward, generate_observations, reset_agent_states, reset_starting_layout, scenario_step
+"""
 
 
-
+"""
+Traceback (most recent call last):
+  File "tt.py", line 78, in <module>
+    env = foundation.make_env_instance(**env_config)
+  File "D:\Tools\ai_ChinaEcon_v2\foundation\__init__.py", line 18, in make_env_instance
+    return scenario_class(**kwargs)
+  File "D:\Tools\ai_ChinaEcon_v2\foundation\scenarios\MacroEcon\layout.py", line 43, in __init__
+AttributeError: 'MacroEconLayout' object has no attribute 'starting_agent_coin'
+"""
