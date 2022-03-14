@@ -79,22 +79,15 @@ test_env_cls = scenario_registry.get("layout/MacroEcon")
 print("scenario_registry.get:", test_env_cls)
 
 env = foundation.make_env_instance(**env_config)
-"""
-Traceback (most recent call last):
-  File "tt.py", line 74, in <module>
-    env = foundation.make_env_instance(**env_config)
-  File "D:\Tools\ai_ChinaEcon_v2\foundation\__init__.py", line 18, in make_env_instance
-    return scenario_class(**kwargs)
-TypeError: Can't instantiate abstract class LayoutFromFile with abstract methods compute_reward, generate_observations, reset_agent_states, reset_starting_layout, scenario_step
-"""
-
 
 """
 Traceback (most recent call last):
-  File "tt.py", line 78, in <module>
+  File "D:\Tools\ai_ChinaEcon_v2\tt.py", line 81, in <module>
     env = foundation.make_env_instance(**env_config)
   File "D:\Tools\ai_ChinaEcon_v2\foundation\__init__.py", line 18, in make_env_instance
     return scenario_class(**kwargs)
-  File "D:\Tools\ai_ChinaEcon_v2\foundation\scenarios\MacroEcon\layout.py", line 43, in __init__
-AttributeError: 'MacroEconLayout' object has no attribute 'starting_agent_coin'
+  File "D:\Tools\ai_ChinaEcon_v2\foundation\scenarios\MacroEcon\layout.py", line 46, in __init__
+  File "D:\Tools\ai_ChinaEcon_v2\foundation\base\base_env.py", line 235, in __init__
+    assert isinstance(components, (tuple, list))
+AssertionError
 """
