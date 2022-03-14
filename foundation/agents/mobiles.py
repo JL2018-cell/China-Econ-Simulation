@@ -16,3 +16,15 @@ class BasicMobileAgent(BaseAgent):
     """
 
     name = "BasicMobileAgent"
+
+    
+@agent_registry.add
+class localGov(BaseAgent):
+    """
+    A basic mobile agent represents an individual actor in the economic simulation.
+    """
+
+    name = "localGov"
+    
+    
+    
