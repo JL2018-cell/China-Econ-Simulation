@@ -66,8 +66,11 @@ print(dir(new_cmp_cls))
 
 
 env_config = {
-    'scenario_name': 'layout/MacroEcon'
+    'scenario_name': 'layout/MacroEcon',
     #to be contnued after layout construction on foundation/scenarios/MacroEcon.
+    'world_size': [100, 100],
+    'n_agents': 3,
+
 }
 
 print("MacroEconLayout:", MacroEconLayout)
