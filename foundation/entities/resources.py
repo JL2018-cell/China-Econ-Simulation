@@ -47,6 +47,22 @@ class Wood(Resource):
 
 
 @resource_registry.add
+class Agriculture(Resource):
+    """Agriculture industry"""
+
+    name = "Agriculture"
+    color = np.array([107, 143, 113]) / 255.0
+    collectible = True
+
+@resource_registry.add
+class Minerals(Resource):
+    """Minerals industry"""
+
+    name = "Minerals"
+    color = np.array([107, 143, 113]) / 255.0
+    collectible = True
+
+@resource_registry.add
 class Stone(Resource):
     """Stone resource. collectible."""
 
