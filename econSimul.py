@@ -71,6 +71,13 @@ env_config = {
     'world_size': [100, 100],
     'n_agents': 3,
 
+    'components': [
+        # (1) Building industries
+        ('Build', {'skill_dist': "pareto", 'payment_max_skill_multiplier': 3}),
+        # (2) Trading resources with other provinces
+        ('ContinuousDoubleAuction', {'max_num_orders': 5}),
+    ],
+
 }
 
 print("MacroEconLayout:", MacroEconLayout)
@@ -80,14 +87,25 @@ print("scenario_registry.get:", test_env_cls)
 
 env = foundation.make_env_instance(**env_config)
 
+print("get agent")
+print(env.get_agent(0))
+
+
+obs = env.reset()
 """
-Traceback (most recent call last):
-  File "D:\Tools\ai_ChinaEcon_v2\tt.py", line 81, in <module>
-    env = foundation.make_env_instance(**env_config)
-  File "D:\Tools\ai_ChinaEcon_v2\foundation\__init__.py", line 18, in make_env_instance
-    return scenario_class(**kwargs)
-  File "D:\Tools\ai_ChinaEcon_v2\foundation\scenarios\MacroEcon\layout.py", line 46, in __init__
-  File "D:\Tools\ai_ChinaEcon_v2\foundation\base\base_env.py", line 235, in __init__
-    assert isinstance(components, (tuple, list))
-AssertionError
+
+def sample_random_actions(env, obs):
+    #Samples random UNMASKED actions for each agent in obs.
+        
+    actions = {
+        a_idx: sample_random_action(env.get_agent(a_idx), a_obs['action_mask'])
+        for a_idx, a_obs in obs.items()
+    }
+
+    return actions
+
+actions = sample_random_actions(env, obs)
+
+obs, rew, done, info = env.step(actions)
+
 """
