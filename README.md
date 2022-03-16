@@ -17,4 +17,5 @@
 ```
 How to declare localGov and centralGov?
 Used in returning observation (China-Econ-Simulation/foundation/scenarios/MacroEcon/Layout.py)
+Solution: see how template works.
 ```
