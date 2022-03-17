@@ -19,3 +19,9 @@ How to declare localGov and centralGov?
 Used in returning observation (China-Econ-Simulation/foundation/scenarios/MacroEcon/Layout.py)
 Solution: see how template works.
 ```
+
+self.world.maps - resources available e.g. agriculture, minerals.
+
+Map representation:
+Square grids. Some grids are empty. Some are non-empty (represent geographical centre of a province).
+Distance between non-empty grids = distance between centre of provinces.
