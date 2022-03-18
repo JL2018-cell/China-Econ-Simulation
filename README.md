@@ -20,6 +20,8 @@ Used in returning observation (China-Econ-Simulation/foundation/scenarios/MacroE
 Solution: see how template works.
 ```
 
+in China-Econ-Simulation/foundation/scenarios/MacroEcon/Layout.py
+self.world.agents - properties of agents
 self.world.maps - resources available e.g. agriculture, minerals.
 
 Map representation:
