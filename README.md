@@ -27,3 +27,5 @@ self.world.maps - resources available e.g. agriculture, minerals.
 Map representation:
 Square grids. Some grids are empty. Some are non-empty (represent geographical centre of a province).
 Distance between non-empty grids = distance between centre of provinces.
+
+How to insert final data and intermediate data into model?
