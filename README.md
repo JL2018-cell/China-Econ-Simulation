@@ -38,9 +38,11 @@ Distance between non-empty grids = distance between centre of provinces. </p>
 
 <li> How to Modify actions of agents? </li>
 <p> Specified in main program: env_config = {'components': [ ...] ...
+  
 ```
 {'n_agents': 4, 'world_size': [15, 15], 'episode_length': 1000, 'multi_action_mode_agents': False, 'multi_action_mode_planner': True, 'flatten_observations': False, 'flatten_masks': True, 'components': [{'Build': {}}, {'ContinuousDoubleAuction': {'max_num_orders': 5}}, {'Gather': {}}]}
 ```
+  
 ai_chinaEcon\foundation\scenarios\simple_wood_and_stone\dynamic_layout.py:107
 base_env_kwargs
 
