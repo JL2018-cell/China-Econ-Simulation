@@ -3,6 +3,7 @@ from foundation.base.base_component import BaseComponent, component_registry
 from foundation.base.base_env import BaseEnvironment, scenario_registry
 from foundation.base.base_agent import BaseAgent, agent_registry
 from foundation.scenarios.MacroEcon.layout import MacroEconLayout
+from foundation.components import component_registry
 import foundation
 
 @resource_registry.add
@@ -69,7 +70,7 @@ env_config = {
     'scenario_name': 'layout/MacroEcon',
     #to be contnued after layout construction on foundation/scenarios/MacroEcon.
     'world_size': [100, 100],
-    'n_agents': 3,
+    'n_agents': 10,
 
     'components': [
         # (1) Building industries
