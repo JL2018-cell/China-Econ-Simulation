@@ -17,7 +17,7 @@ class BasicMobileAgent(BaseAgent):
 
     name = "BasicMobileAgent"
 
-    
+
 @agent_registry.add
 class localGov(BaseAgent):
     """
@@ -25,6 +25,5 @@ class localGov(BaseAgent):
     """
 
     name = "localGov"
-    
-    
-    
+
+
