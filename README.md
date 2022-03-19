@@ -17,7 +17,8 @@
 ```
 How to declare localGov and centralGov?
 Used in returning observation (China-Econ-Simulation/foundation/scenarios/MacroEcon/Layout.py)
-Solution: see how template works.
+Solution: Defined in 'n_agents': 10 in dictionary env_config at the main program. i.e. econSimul.py
+-> 10 local gov & 1 central gov.
 ```
 
 in China-Econ-Simulation/foundation/scenarios/MacroEcon/Layout.py
