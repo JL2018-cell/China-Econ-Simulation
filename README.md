@@ -29,3 +29,12 @@ Square grids. Some grids are empty. Some are non-empty (represent geographical c
 Distance between non-empty grids = distance between centre of provinces.
 
 How to insert final data and intermediate data into model?
+
+20220319
+Current problem:
+(Pdb) p world_obs.keys()
+dict_keys(['p', 'map']) #Include too littel objects in generate_observation in layout.py
+(Pdb) p agent_wise_planner_obs
+{'p0': {}, 'p1': {}, 'p2': {}} #3 local governments
+
+
