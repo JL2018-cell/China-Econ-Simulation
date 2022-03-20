@@ -1,4 +1,4 @@
-#Refer to build.py
+
 
 from foundation.base.base_component import (
     BaseComponent,
@@ -18,3 +18,13 @@ class Construct(BaseComponent):
     def __init__(self, *base_component_args, payment=10, **base_component_kwargs):
         super().__init__(*base_component_args, **base_component_kwargs)
         self.payment = payment
+
+    def component_step():
+        return []
+
+    def generate_masks():
+    def generate_observations():
+    def get_additional_state_fields():
+    def get_n_actions():
+
+
