@@ -4,6 +4,8 @@ from foundation.base.base_env import BaseEnvironment, scenario_registry
 from foundation.base.base_agent import BaseAgent, agent_registry
 from foundation.scenarios.MacroEcon.layout import MacroEconLayout
 from foundation.components import component_registry
+from foundation.components.Construct import Construct
+from foundation.components.Transport import Transport
 import foundation
 
 @resource_registry.add
@@ -73,11 +75,20 @@ env_config = {
     'n_agents': 10,
 
     'components': [
-        # (1) Building industries
-        ('Build', {'skill_dist': "pareto", 'payment_max_skill_multiplier': 3}),
-        # (2) Trading resources with other provinces
-        ('ContinuousDoubleAuction', {'max_num_orders': 5}),
+        #Build industries
+        {"Construct": {}},
+        #Import resources from other provinces
+        {"Transport": {}}
     ],
+
+    #'components': [
+    #    # (1) Building houses
+    #    {'Build': {}},
+    #    # (2) Trading collectible resources
+    #    {'ContinuousDoubleAuction': {'max_num_orders': 5}},
+    #    # (3) Movement and resource collection
+    #    {'Gather': {}},
+    #],
 
 }
 
