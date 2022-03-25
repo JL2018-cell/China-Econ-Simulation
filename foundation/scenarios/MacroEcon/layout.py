@@ -32,16 +32,17 @@ class MacroEconLayout(BaseEnvironment):
   required_industries = ["Agriculture", "Minerals"]
   required_entities = required_industries
 
-  def __init__(self, **kwargs):
+  def __init__(self, starting_agent_resources, **kwargs):
     self.world_size = [100, 100]
     self.energy_cost = 100
     self.expn_per_day = 100
     self.pt_per_day = 100
     self.toCarbonEffcy = 0.5
     self.toGDPEffcy = 0.5
-    
-    self.agric = 100.
-    self.energy = 100.
+    self.GDP_contrib = {"Minerals": 100, "Agriculture": 50}
+    self.CO2_contrib = {"Minerals": 110, "Agriculture": 100} 
+    self.agric = starting_agent_resources["Food"]
+    self.energy = starting_agent_resources["Energy"]
     self.resource_points = 100.
     #assert self.starting_agent_coin >= 0.0
     super().__init__(**kwargs)
@@ -82,7 +83,7 @@ class MacroEconLayout(BaseEnvironment):
           for k, v in self.world.planner.inventory.items()
       }
       #Show location of modelled provinces/lcal government
-      obs['map'] = self.world.maps.state
+      #obs['map'] = self.world.maps.state
 
       #for agent in self.world.agents:
       #for planner in self.world.planners:
