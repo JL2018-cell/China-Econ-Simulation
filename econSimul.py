@@ -78,7 +78,9 @@ env_config = {
         #Build industries
         {"Construct": {}},
         #Import resources from other provinces
-        {"Transport": {}}
+        {"Transport": {}},
+        #Exchange resources, industry points by auction.
+        {'ContinuousDoubleAuction': {'max_num_orders': 5}},
     ],
 
     #'components': [
@@ -90,6 +92,8 @@ env_config = {
     #    {'Gather': {}},
     #],
 
+    # (optional) kwargs of the chosen scenario class
+    'starting_agent_resources': {"Food": 10., "Energy": 10.} #food, energy
 }
 
 print("MacroEconLayout:", MacroEconLayout)
