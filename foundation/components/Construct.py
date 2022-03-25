@@ -106,7 +106,7 @@ class Construct(BaseComponent):
 
         return obs_dict
 
-    def get_additional_state_fields(self):
+    def get_additional_state_fields(self, agent_cls_name):
         """
         See base_component.py for detailed description.
 
@@ -118,7 +118,7 @@ class Construct(BaseComponent):
             return {"build_payment": float(self.payment), "build_resources": 1}
         raise NotImplementedError
 
-    def get_n_actions(self):
+    def get_n_actions(self, agent_cls_name):
         """
         See base_component.py for detailed description.
 
