@@ -21,10 +21,15 @@ class Transport(BaseComponent):
 
 
 
-    def component_step():
-    def generate_masks():
-    def generate_observations():
-    def get_additional_state_fields():
-    def get_n_actions():
+    def component_step(self):
+      return []
+    def generate_masks(self):
+      return []
+    def generate_observations(self):
+      return []
+    def get_additional_state_fields(self, agent_cls_name):
+      return {}
+    def get_n_actions(self, agent_cls_name):
+      return []
 
 
