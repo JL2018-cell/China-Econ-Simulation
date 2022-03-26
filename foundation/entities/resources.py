@@ -63,6 +63,14 @@ class Minerals(Resource):
     collectible = True
 
 @resource_registry.add
+class Energy(Resource):
+    """Minerals industry"""
+
+    name = "Minerals"
+    color = np.array([107, 143, 113]) / 255.0
+    collectible = True
+
+@resource_registry.add
 class Stone(Resource):
     """Stone resource. collectible."""
 
