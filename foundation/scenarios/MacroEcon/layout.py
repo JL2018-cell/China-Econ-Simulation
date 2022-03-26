@@ -29,7 +29,7 @@ class MacroEconLayout(BaseEnvironment):
   """
   
   agent_subclasses = ["LocalGov", "CentralGov"]
-  required_industries = ["Agriculture", "Minerals"]
+  required_industries = ["Agriculture", "Minerals", "Energy"]
   required_entities = required_industries
 
   def __init__(self, starting_agent_resources, **kwargs):
