@@ -377,8 +377,10 @@ class World:
         self.multi_action_mode_planner = bool(multi_action_mode_planner)
         self.maps = Maps(world_size, n_agents, world_resources, world_landmarks)
 
-        mobile_class = agent_registry.get("BasicMobileAgent")
-        planner_class = agent_registry.get("BasicPlanner")
+        #mobile_class = agent_registry.get("BasicMobileAgent")
+        #planner_class = agent_registry.get("BasicPlanner")
+        mobile_class = agent_registry.get("localGov")
+        planner_class = agent_registry.get("centralGov")
         self._agents = [
             mobile_class(i, multi_action_mode=self.multi_action_mode_agents)
             for i in range(self.n_agents)
