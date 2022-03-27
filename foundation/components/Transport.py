@@ -23,10 +23,16 @@ class Transport(BaseComponent):
 
     def component_step(self):
       return []
-    def generate_masks(self):
-      return []
+    def generate_masks(self,completions = 0):
+      masks = {}
+      # Mobile agents' build action is masked if they cannot build with their
+      # current location and/or endowment
+      for agent in self.world.agents:
+          masks[agent.idx] = np.array([self.agent_can_build(agent)])
+
+      return masks
     def generate_observations(self):
-      return []
+      return {}
     def get_additional_state_fields(self, agent_cls_name):
       return {}
     def get_n_actions(self, agent_cls_name):
