@@ -75,7 +75,7 @@ class Construct(BaseComponent):
 
         return []
 
-    def generate_masks(self):
+    def generate_masks(self, completions = 0):
         masks = {}
         # Mobile agents' build action is masked if they cannot build with their
         # current location and/or endowment
@@ -99,9 +99,12 @@ class Construct(BaseComponent):
         for agent in self.world.agents:
             obs_dict[agent.idx] = {
                 #How much is paid to build industries.
-                "build_payment": agent.state["build_payment"] / self.payment,
+                #"build_payment": agent.state["build_payment"] / self.payment,
                 #How much resource is generated.
-                "build_resources": self.sampled_skills[agent.idx],
+                #"build_resources": self.sampled_skills[agent.idx],
+                "loc": agent.state["loc"],
+                "Agriculture": agent.state["inventory"]["Agriculture"],
+                "Energy": agent.state["inventory"]["Energy"]
             }
 
         return obs_dict
