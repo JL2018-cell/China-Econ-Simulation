@@ -66,9 +66,37 @@ class Minerals(Resource):
 class Energy(Resource):
     """Minerals industry"""
 
-    name = "Minerals"
+    name = "Energy"
     color = np.array([107, 143, 113]) / 255.0
     collectible = True
+
+
+@resource_registry.add
+class Tourism(Resource):
+    """Minerals industry"""
+
+    name = "Tourism"
+    color = np.array([107, 143, 113]) / 255.0
+    collectible = True
+
+
+@resource_registry.add
+class IT(Resource):
+    """Minerals industry"""
+
+    name = "IT"
+    color = np.array([107, 143, 113]) / 255.0
+    collectible = True
+
+
+@resource_registry.add
+class Finance(Resource):
+    """Minerals industry"""
+
+    name = "Finance"
+    color = np.array([107, 143, 113]) / 255.0
+    collectible = True
+
 
 @resource_registry.add
 class Stone(Resource):
