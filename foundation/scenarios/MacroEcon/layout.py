@@ -32,7 +32,7 @@ class MacroEconLayout(BaseEnvironment):
   required_industries = ["Agriculture", "Minerals", "Energy"]
   required_entities = required_industries
 
-  def __init__(self, starting_agent_resources, **kwargs):
+  def __init__(self, starting_agent_resources, industries, **kwargs):
     self.world_size = [100, 100]
     self.energy_cost = 100
     self.expn_per_day = 100
@@ -44,6 +44,7 @@ class MacroEconLayout(BaseEnvironment):
     self.agric = starting_agent_resources["Food"]
     self.energy = starting_agent_resources["Energy"]
     self.resource_points = 100.
+    self.industries = industries
     #assert self.starting_agent_coin >= 0.0
     super().__init__(**kwargs)
 
