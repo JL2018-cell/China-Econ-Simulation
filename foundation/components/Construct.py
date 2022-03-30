@@ -121,6 +121,7 @@ class Construct(BaseComponent):
             return {"build_payment": float(self.payment), "build_resources": 1}
         raise NotImplementedError
 
+    #Define actions available for agent
     def get_n_actions(self, agent_cls_name):
         """
         See base_component.py for detailed description.
@@ -128,7 +129,7 @@ class Construct(BaseComponent):
         Add a single action (build) for mobile agents.
         """
         # This component adds 1 action that mobile agents can take: build a house
-        if agent_cls_name == "BasicMobileAgent":
+        if agent_cls_name == "localGov":
             return 1
 
         return None
