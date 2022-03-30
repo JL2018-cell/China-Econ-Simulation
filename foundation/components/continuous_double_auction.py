@@ -36,8 +36,8 @@ class ContinuousDoubleAuction(BaseComponent):
 
     name = "ContinuousDoubleAuction"
     component_type = "Trade"
-    required_entities = ["Coin", "Labor"]
-    agent_subclasses = ["BasicMobileAgent"]
+    required_entities = ["Agriculture", "Minerals", "Energy", "Tourism", "IT", "Finance"]
+    agent_subclasses = ["localGov"]
 
     def __init__(
         self,
@@ -556,7 +556,7 @@ class ContinuousDoubleAuction(BaseComponent):
         for agent in world.agents:
             masks[agent.idx] = {}
 
-            can_pay = np.arange(self.max_bid_ask + 1) <= agent.inventory["Coin"]
+            can_pay = np.arange(self.max_bid_ask + 1) <= agent.inventory["Agriculture"] + agent.inventory["Energy"]
 
             for resource in self.commodities:
                 if not self.can_ask(resource, agent):  # asks_maxed:
