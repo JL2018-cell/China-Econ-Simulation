@@ -14,20 +14,17 @@
 
 # Technical Details
 <li> agents should not be 'BasicMobileAgent' but 'localGov' ai_ChinaEcon\foundation\agents\mobiles.py </li>
-```
-See agent assignment at ai_ChinaEcon_v2\foundation\base\base_env.py:348, 532
+<p> See agent assignment at ai_ChinaEcon_v2\foundation\base\base_env.py:348, 532
         mobile_class = agent_registry.get("localGov")
-        planner_class = agent_registry.get("centralGov")
-        ```
+        planner_class = agent_registry.get("centralGov") </p>
+
 
 <li> should not include agent 'map' in generate_observations. Should include agents and planner only. </li>
-```
-«ai_ChinaEcon\foundation\components\Construct.py» 134 lines, 4526 characters
-```
+<p> ai_ChinaEcon\foundation\components\Construct.py </p>
+
 
 <li> Register endogenous variables and other industries </li>
-```
-{'resources': ['Coin'], 'landmarks': [], 'endogenous': ['Labor']} «ai_ChinaEcon\foundation\base\base_env.py» [Lf] line 369 of 1151. 
+<p> {'resources': ['Coin'], 'landmarks': [], 'endogenous': ['Labor']} ai_ChinaEcon\foundation\base\base_env.py line 269
 
 Solution: Register in ai_ChinaEcon\foundation\entities\endogenous.py, ai_ChinaEcon\foundation\entities\landmarks.py, ai_ChinaEcon\foundation\entities\resources.py
 
@@ -60,7 +57,7 @@ Uncaught exception. Entering post mortem debugging
 Running 'cont' or 'step' will restart the program
 > ai_ChinaEcon\foundation\base\base_env.py(380)_register_entities()
 -> raise KeyError("Unknown entity: {}".format(entity))
-```
+        </p>
 
 <li> Include industry names into states of agents ai_ChinaEcon\foundation\entities\resources.py.  To record how agent develop the industry. </li>
 
