@@ -12,7 +12,7 @@
 <li> China-Econ-Simulation/foundation/entities/resources.py </li>
 <p> industries </p>
 
-<h1> Technical Details </h1>
+# Technical Details
 <li> agents should not be 'BasicMobileAgent' but 'localGov' ai_ChinaEcon\foundation\agents\mobiles.py </li>
 ```
 See agent assignment at ai_ChinaEcon_v2\foundation\base\base_env.py:348, 532
