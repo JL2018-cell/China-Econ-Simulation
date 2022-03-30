@@ -19,8 +19,12 @@ See agent assignment at ai_ChinaEcon_v2\foundation\base\base_env.py:348, 532
         mobile_class = agent_registry.get("localGov")
         planner_class = agent_registry.get("centralGov")
 ```
+
 <li> should not include agent 'map' in generate_observations. Should include agents and planner only. </li>
-```«ai_ChinaEcon\foundation\components\Construct.py» 134 lines, 4526 characters```
+```
+«ai_ChinaEcon\foundation\components\Construct.py» 134 lines, 4526 characters
+```
+
 <li> Register endogenous variables and other industries </li>
 ```
 {'resources': ['Coin'], 'landmarks': [], 'endogenous': ['Labor']} «ai_ChinaEcon\foundation\base\base_env.py» [Lf] line 369 of 1151. 
@@ -57,7 +61,9 @@ Running 'cont' or 'step' will restart the program
 > ai_ChinaEcon\foundation\base\base_env.py(380)_register_entities()
 -> raise KeyError("Unknown entity: {}".format(entity))
 ```
+
 <li> Include industry names into states of agents ai_ChinaEcon\foundation\entities\resources.py.  To record how agent develop the industry. </li>
+
 <li> Change location of localGov in world map. Different provinces have different locations. Their distances between one another affects transport cost. </li>
 ```
 ai_ChinaEcon\foundation\components\Construct.py
@@ -93,6 +99,7 @@ Running 'cont' or 'step' will restart the program
 > ai_ChinaEcon\foundation\base\base_env.py(380)_register_entities()
 -> raise KeyError("Unknown entity: {}".format(entity))
 ```
+
 <li> What actions can be taken by localGov, centralGov? Where to define actions? </li>
 ```
 Answer: Action 1a: increase industry 1 by 1 point. Action 1b: decrease industry 1 by 1 point. Action 1c: Transport dustry point out by 1 point. Action 1d: Transport industry point in by 1 point, etc.
@@ -100,6 +107,7 @@ Refer to  line 16, «ai_ChinaEcon\foundation\base\base_agent.py» [Lf] line 116 
 ```
 
 <h2> Useful references </h2>
+
 <li> attributes of agent </li>
 ```
 (Pdb) p BaseAgent
