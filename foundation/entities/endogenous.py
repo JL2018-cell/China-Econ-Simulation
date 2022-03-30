@@ -34,3 +34,17 @@ class Labor(Endogenous):
     """Labor accumulated through working. Included in all environments by default."""
 
     name = "Labor"
+
+
+@endogenous_registry.add
+class GDP(Endogenous):
+    """Labor accumulated through working. Included in all environments by default."""
+    name = "GDP"
+
+
+@endogenous_registry.add
+class CO2(Endogenous):
+    """Labor accumulated through working. Included in all environments by default."""
+    name = "CO2"
+
+
