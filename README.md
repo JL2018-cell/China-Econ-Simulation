@@ -43,4 +43,11 @@ self.world.maps - resources available e.g. agriculture, minerals.
 Distance between non-empty grids = distance between centre of provinces. </p>
 
 
+# Coding setting
+<li> Change industries available in macroEcon: </li>
+industries in env_config (a dictionary) in tt.py
+required_entities in ai_ChinaEcon\foundation\components\continuous_double_auction.py
+classes in ai_ChinaEcon\foundation\entities\resources.py
+required_entities in ai_ChinaEcon\foundation\components\Construct.py
+
 
