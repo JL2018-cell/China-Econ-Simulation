@@ -18,7 +18,7 @@
 See agent assignment at ai_ChinaEcon_v2\foundation\base\base_env.py:348, 532
         mobile_class = agent_registry.get("localGov")
         planner_class = agent_registry.get("centralGov")
-```
+        ```
 
 <li> should not include agent 'map' in generate_observations. Should include agents and planner only. </li>
 ```
