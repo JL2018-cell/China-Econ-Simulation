@@ -22,6 +22,7 @@
 <li> What actions can be taken by localGov, centralGov? Where to define actions?  </li>
 <p> Answer: Action 1a: increase industry 1 by 1 point. Action 1b: decrease industry 1 by 1 point. Action 1c: Transport dustry point out by 1 point. Action 1d: Transport industry point in by 1 point, etc.
 * Role of Auction: Province can use agriculture/energy to exchange energy/agriculture points, industry points. </p>
+Defined in line 191 of ai_ChinaEcon\foundation\base\base_component.py
 
 # Done task
 <li> How to declare localGov and centralGov? </li>
