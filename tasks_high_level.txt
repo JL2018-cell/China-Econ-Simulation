@@ -1,0 +1,9 @@
+
+* agents should not be 'BasicMobileAgent' but 'localGov'.
+* should not include agent 'map' in generate_observations. Should include agents and planner only.
+* Register endogenous variables e.g. GDP, CO2 and other industries e.g. Finance, Tourism.
+* Include industry names into states of agents. To record how agent develop the industry.
+* Change location of localGov in world map. Different provinces have different locations. Their distances between one another affects transport cost.
+* What actions can be taken by localGov, centralGov? Where to define actions? 
+Answer: Action 1a: increase industry 1 by 1 point. Action 1b: decrease industry 1 by 1 point. Action 1c: Transport dustry point out by 1 point. Action 1d: Transport industry point in by 1 point, etc.
+* Role of Auction: Province can use agriculture/energy to exchange energy/agriculture points, industry points.
