@@ -1,4 +1,4 @@
-
+import numpy as np
 
 from foundation.base.base_component import (
     BaseComponent,
@@ -28,7 +28,7 @@ class Transport(BaseComponent):
       # Mobile agents' build action is masked if they cannot build with their
       # current location and/or endowment
       for agent in self.world.agents:
-          masks[agent.idx] = np.array([self.agent_can_build(agent)])
+          masks[agent.idx] = np.array([True])
 
       return masks
     def generate_observations(self):
