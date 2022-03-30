@@ -21,8 +21,11 @@
 <li> Change location of localGov in world map. Different provinces have different locations. Their distances between one another affects transport cost. </li>
 <li> What actions can be taken by localGov, centralGov? Where to define actions?  </li>
 <p> Answer: Action 1a: increase industry 1 by 1 point. Action 1b: decrease industry 1 by 1 point. Action 1c: Transport dustry point out by 1 point. Action 1d: Transport industry point in by 1 point, etc.
-* Role of Auction: Province can use agriculture/energy to exchange energy/agriculture points, industry points. </p>
+Role of Auction: Province can use agriculture/energy to exchange energy/agriculture points, industry points. </p>
 Defined in line 191 of ai_ChinaEcon\foundation\base\base_component.py
+<li> How to gernerate action masks? </li>
+<p> Refer to line 180 of ai_ChinaEcon\foundation\components\build.py </p>
+
 
 # Done task
 <li> How to declare localGov and centralGov? </li>
