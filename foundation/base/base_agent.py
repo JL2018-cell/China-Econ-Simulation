@@ -168,7 +168,8 @@ class BaseAgent:
 
         self._noop_action_dict = {k: v * 0 for k, v in self.action.items()}
 
-        verbose = False
+        #verbose = False
+        verbose = True
         if verbose:
             print(self.name, self.idx, "constructed action map:")
             for k, v in self.single_action_map.items():
