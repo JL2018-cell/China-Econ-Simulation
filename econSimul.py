@@ -82,15 +82,8 @@ env_config = {
         #Exchange resources, industry points by auction.
         {'ContinuousDoubleAuction': {'max_num_orders': 5}},
     ],
-
-    #'components': [
-    #    # (1) Building houses
-    #    {'Build': {}},
-    #    # (2) Trading collectible resources
-    #    {'ContinuousDoubleAuction': {'max_num_orders': 5}},
-    #    # (3) Movement and resource collection
-    #    {'Gather': {}},
-    #],
+    'industries': ['Agriculture', 'Energy', 'Finance', \
+                   'IT', 'Minerals', 'Tourism'], #Help to define actions of localGov
 
     # (optional) kwargs of the chosen scenario class
     'starting_agent_resources': {"Food": 10., "Energy": 10.} #food, energy
