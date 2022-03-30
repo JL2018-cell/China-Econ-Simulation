@@ -16,7 +16,7 @@ class Construct(BaseComponent):
 
     name = "Construct"
     component_type = "Construct"
-    required_entities = ["Agriculture", "Minerals"]
+    required_entities = ['Agriculture', 'Energy', 'Finance', 'IT', 'Minerals', 'Tourism']
     agent_subclasses = ["BasicMobileAgent"]
 
 
@@ -76,13 +76,17 @@ class Construct(BaseComponent):
         return []
 
     def generate_masks(self, completions = 0):
+        #Refer to ai_ChinaEcon\foundation\components\continuous_double_auction.py:580
         masks = {}
-        # Mobile agents' build action is masked if they cannot build with their
-        # current location and/or endowment
         for agent in self.world.agents:
-            masks[agent.idx] = np.array([self.agent_can_build(agent)])
-
+            masks[agent.idx] = {}
+            #localGov is free to build or break its industries.
+            for entity in self.required_entities:
+                masks[agent.idx][entity] = np.array([True, True]) #np.array([build, break])
+                #masks[agent.idx]["build_" + entity] = np.array([True, True])
+                #masks[agent.idx]["break_" + entity] = np.array([True, True])
         return masks
+
 
     def generate_observations(self):
         """
@@ -128,9 +132,11 @@ class Construct(BaseComponent):
 
         Add a single action (build) for mobile agents.
         """
-        # This component adds 1 action that mobile agents can take: build a house
+        #Local government can choose to:
+        #1. Increase industry point by 1.
+        #1. Decrease industry point by 1.
         if agent_cls_name == "localGov":
-            return 1
+            return [(entity, 2) for entity in self.required_entities]
 
         return None
 
