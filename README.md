@@ -25,7 +25,7 @@ Role of Auction: Province can use agriculture/energy to exchange energy/agricult
 Defined in line 191 of ai_ChinaEcon\foundation\base\base_component.py
 <li> How to gernerate action masks? </li>
 <p> Refer to line 180 of ai_ChinaEcon\foundation\components\build.py </p>
-
+<li> Consider enabling "multi_action_mode" because government can carry out >1 policy simultaneously. </li>
 
 # Done task
 <li> How to declare localGov and centralGov? </li>
