@@ -7,6 +7,7 @@ from foundation.components import component_registry
 from foundation.components.Construct import Construct
 from foundation.components.Transport import Transport
 import foundation
+import numpy as np
 
 @resource_registry.add
 class Widget(Resource):
@@ -101,6 +102,35 @@ print(env.get_agent(0))
 
 
 obs = env.reset()
+
+def sample_random_action(agent, mask):
+    """Sample random UNMASKED action(s) for agent."""
+    # Return a list of actions: 1 for each action subspace
+    if agent.multi_action_mode:
+        split_masks = np.split(mask, agent.action_spaces.cumsum()[:-1])
+        return [np.random.choice(np.arange(len(m_)), p=m_/m_.sum()) for m_ in split_masks]
+
+    # Return a single action
+    else:
+        return np.random.choice(np.arange(agent.action_spaces), p=mask/mask.sum())
+
+
+def sample_random_actions(env, obs):
+    """Samples random UNMASKED actions for each agent in obs."""
+        
+    actions = {
+        a_idx: sample_random_action(env.get_agent(a_idx), a_obs['action_mask'])
+        for a_idx, a_obs in obs.items()
+    }
+
+    return actions
+
+
+actions = sample_random_actions(env, obs)
+#call step to advance the state and advance time by one tick.
+obs, rew, done, info = env.step(actions)
+
+
 """
 
 def sample_random_actions(env, obs):
