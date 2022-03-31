@@ -17,7 +17,7 @@ class Construct(BaseComponent):
     name = "Construct"
     component_type = "Construct"
     required_entities = ['Agriculture', 'Energy', 'Finance', 'IT', 'Minerals', 'Tourism']
-    agent_subclasses = ["BasicMobileAgent"]
+    agent_subclasses = ["localGov"]
 
 
     def __init__(self, *base_component_args, payment=10, **base_component_kwargs):
@@ -116,13 +116,17 @@ class Construct(BaseComponent):
     def get_additional_state_fields(self, agent_cls_name):
         """
         See base_component.py for detailed description.
-
-        For mobile agents, add state fields for building skill.
+        Update CO2, GDP, Labour variables of localGov.
         """
         if agent_cls_name not in self.agent_subclasses:
             return {}
         if agent_cls_name == "BasicMobileAgent":
             return {"build_payment": float(self.payment), "build_resources": 1}
+        if agent_cls_name == "localGov":
+          for agent in self.world.agents:
+            agents.state['endogenous']['CO2'] += 1
+            agents.state['endogenous']['GDP'] += 1
+            agents.state['endogenous']['Labor'] += 1
         raise NotImplementedError
 
     #Define actions available for agent
@@ -136,8 +140,13 @@ class Construct(BaseComponent):
         #1. Increase industry point by 1.
         #1. Decrease industry point by 1.
         if agent_cls_name == "localGov":
-            return [(entity, 2) for entity in self.required_entities]
-
+            #Inappropriate. This is telling agent can move in 2 direction in world map.
+            #return [(entity, 2) for entity in self.required_entities]
+            actions = []
+            for c in self.required_entities:
+                actions.append(("Buy_{}".format(c), 1))
+                actions.append(("Sell_{}".format(c), 1))
+            return actions
         return None
 
 
