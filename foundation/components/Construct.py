@@ -32,6 +32,29 @@ class Construct(BaseComponent):
         for agent in world.get_random_order_agents():
 
             action = agent.get_component_action(self.name)
+            #Each agent has a prefernce list to construct or vreak industry.
+            """
+            action list:
+            ['Construct.build_Agriculture', 'Construct.break_Agriculture', 
+             'Construct.build_Energy', 'Construct.break_Energy', 
+             'Construct.build_Finance', 'Construct.break_Finance', 
+             'Construct.build_IT', 'Construct.break_IT', 
+             'Construct.build_Minerals', 'Construct.break_Minerals', 
+             'Construct.build_Tourism', 'Construct.break_Tourism']
+            if action[0] > 0:
+            if action[1] > 0:
+            if action[2] > 0:
+            if action[3] > 0:
+            if action[4] > 0:
+            if action[5] > 0:
+            if action[6] > 0:
+            if action[7] > 0:
+            if action[8] > 0:
+            if action[9] > 0:
+            if action[10] > 0:
+            if action[11] > 0:
+            if action[12] > 0:
+            """
 
             # This component doesn't apply to this agent!
             if action is None:
@@ -82,9 +105,9 @@ class Construct(BaseComponent):
             masks[agent.idx] = {}
             #localGov is free to build or break its industries.
             for entity in self.required_entities:
-                masks[agent.idx][entity] = np.array([True, True]) #np.array([build, break])
-                #masks[agent.idx]["build_" + entity] = np.array([True, True])
-                #masks[agent.idx]["break_" + entity] = np.array([True, True])
+                #masks[agent.idx][entity] = np.array([True, True]) #np.array([build, break])
+                masks[agent.idx]["build_" + entity] = np.array([True, True])
+                masks[agent.idx]["break_" + entity] = np.array([True, True])
         return masks
 
 
@@ -123,10 +146,8 @@ class Construct(BaseComponent):
         if agent_cls_name == "BasicMobileAgent":
             return {"build_payment": float(self.payment), "build_resources": 1}
         if agent_cls_name == "localGov":
-          for agent in self.world.agents:
-            agents.state['endogenous']['CO2'] += 1
-            agents.state['endogenous']['GDP'] += 1
-            agents.state['endogenous']['Labor'] += 1
+          #Keep track on how many points does localGov spend on constructing industries and transporting resources form other provinces.
+          return {"construct_payment": 0.0, "transport_resources": 0.0}
         raise NotImplementedError
 
     #Define actions available for agent
@@ -144,8 +165,8 @@ class Construct(BaseComponent):
             #return [(entity, 2) for entity in self.required_entities]
             actions = []
             for c in self.required_entities:
-                actions.append(("Buy_{}".format(c), 1))
-                actions.append(("Sell_{}".format(c), 1))
+                actions.append(("build_{}".format(c), 2))
+                actions.append(("break_{}".format(c), 2))
             return actions
         return None
 
