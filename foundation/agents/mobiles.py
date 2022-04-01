@@ -13,6 +13,13 @@ class localGov(BaseAgent):
     """
 
     name = "localGov"
+    #preference = {} 
+    #{inv: 0.5 for inv in self._registered_inventory}
+    def __init__(self, idx=None, multi_action_mode=None):
+        BaseAgent.__init__(self, idx=None, multi_action_mode=None)
+        self.preference = {inv: 0.5 for inv in self._registered_inventory}
+        #(Pdb) p self.state
+        #{'loc': [0, 0], 'inventory': {}, 'escrow': {}, 'endogenous': {}}
 
 #@agent_registry.add
 #class BasicMobileAgent(BaseAgent):
