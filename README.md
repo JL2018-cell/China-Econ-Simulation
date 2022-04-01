@@ -26,6 +26,9 @@ Defined in line 191 of ai_ChinaEcon\foundation\base\base_component.py
 <li> How to gernerate action masks? </li>
 <p> Refer to line 180 of ai_ChinaEcon\foundation\components\build.py </p>
 <li> Consider enabling "multi_action_mode" because government can carry out >1 policy simultaneously. </li>
+<li> (Done) Make action mask and action consistent. </li>
+<li> Complete: evolvement of agents defined in component_step in ai_ChinaEcon\foundation\components\Construct.py </li>
+<p> This relates to actions of agents. </p>
 
 # Done task
 <li> How to declare localGov and centralGov? </li>
