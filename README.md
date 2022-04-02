@@ -31,7 +31,7 @@ Defined in line 191 of ai_ChinaEcon\foundation\base\base_component.py
 <li> (Done) Make action mask and action consistent. </li>
 <li> Complete: evolvement of agents defined in component_step in ai_ChinaEcon\foundation\components\Construct.py </li>
 <p> This relates to actions of agents. </p>
-<li> Building industries involves no cost so far. agent.state["performance"]["GDP"], agent.state["endogenous"]["Labor"], agent.state["performance"]["CO2"] are skipped temporarily. See component_step() in ai_ChinaEcon\foundation\components\Construct.py</li>
+<li> Building industries involves no cost so far. agent.state["performance"]["GDP"], agent.state["endogenous"]["Labor"], agent.state["performance"]["CO2"], effects to map are skipped temporarily. See component_step() in ai_ChinaEcon\foundation\components\Construct.py</li>
 
 # Done task
 <li> How to declare localGov and centralGov? </li>
