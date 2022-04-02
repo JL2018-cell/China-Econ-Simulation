@@ -9,6 +9,7 @@ from foundation.base.base_component import (
 
 from foundation.scenarios.MacroEcon.layout import MacroEconLayout #Get data of GDP, CO2 contribution.
 import numpy as np
+import random
 
 #Build an industry
 @component_registry.add
@@ -41,21 +42,47 @@ class Construct(BaseComponent):
              'Construct.build_IT', 'Construct.break_IT', 
              'Construct.build_Minerals', 'Construct.break_Minerals', 
              'Construct.build_Tourism', 'Construct.break_Tourism']
-            if action[0] > 0:
-            if action[1] > 0:
-            if action[2] > 0:
-            if action[3] > 0:
-            if action[4] > 0:
-            if action[5] > 0:
-            if action[6] > 0:
-            if action[7] > 0:
-            if action[8] > 0:
-            if action[9] > 0:
-            if action[10] > 0:
-            if action[11] > 0:
-            if action[12] > 0:
             """
+            for agent in self.world.agents:
+                if action[0] > 0:
+                    if random.random() < agent.preference['Agriculture']: #Construct Agriulture industry.
+                        self.world.agents[0].inventory['Agriculture'] += 1
+                if action[1] > 0: #Destroy Agriculture industry
+                    if random.random() > agent.preference['Agriculture']: #Construct Agriulture industry.
+                        self.world.agents[0].inventory['Agriculture'] -= 1
+                if action[2] > 0:
+                    if random.random() < agent.preference['Energy']: #Construct Agriulture industry.
+                        self.world.agents[0].inventory['Energy'] += 1
+                if action[3] > 0:
+                    if random.random() > agent.preference['Energy']: #Construct Agriulture industry.
+                        self.world.agents[0].inventory['Energy'] -= 1
+                if action[4] > 0:
+                    if random.random() < agent.preference['Finance']: #Construct Agriulture industry.
+                        self.world.agents[0].inventory['Finance'] += 1
+                if action[5] > 0:
+                    if random.random() > agent.preference['Finance']: #Construct Agriulture industry.
+                        self.world.agents[0].inventory['Finance'] -= 1
+                if action[6] > 0:
+                    if random.random() < agent.preference['IT']: #Construct Agriulture industry.
+                        self.world.agents[0].inventory['IT'] += 1
+                if action[7] > 0:
+                    if random.random() > agent.preference['IT']: #Construct Agriulture industry.
+                        self.world.agents[0].inventory['IT'] -= 1
+                if action[8] > 0:
+                    if random.random() < agent.preference['Minerals']: #Construct Agriulture industry.
+                        self.world.agents[0].inventory['Minerals'] += 1
+                if action[9] > 0:
+                    if random.random() > agent.preference['Minerals']: #Construct Agriulture industry.
+                        self.world.agents[0].inventory['Minerals'] -= 1
+                if action[10] > 0:
+                    if random.random() < agent.preference['Tourism']: #Construct Agriulture industry.
+                        self.world.agents[0].inventory['Tourism'] += 1
+                if action[11] > 0:
+                    if random.random() > agent.preference['Tourism']: #Construct Agriulture industry.
+                        self.world.agents[0].inventory['Tourism'] -= 1
+            #self.world.agents[0].preference
 
+            """
             # This component doesn't apply to this agent!
             if action is None:
                 continue
@@ -93,8 +120,9 @@ class Construct(BaseComponent):
 
             else:
                 raise ValueError
+            """
 
-        self.builds.append(build)
+        #self.builds.append(build)
 
         return []
 
