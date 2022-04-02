@@ -11,6 +11,8 @@
 <p> Agent: Local governments. </p>
 <li> China-Econ-Simulation/foundation/entities/resources.py </li>
 <p> industries </p>
+<li> Local Governments acts after there is instructions. Doubtful if this is realistic.</li>
+<p> See component_step() in ai_ChinaEcon\foundation\components\Construct.py </p>
 
 # Current task
 <li> How to insert final data and intermediate data into model? </li>
