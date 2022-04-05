@@ -100,7 +100,7 @@ env = foundation.make_env_instance(**env_config)
 print("get agent")
 print(env.get_agent(0))
 
-
+#call ai_ChinaEcon\foundation\base\base_env.py:852
 obs = env.reset()
 
 def sample_random_action(agent, mask):
@@ -119,6 +119,7 @@ def sample_random_actions(env, obs):
     """Samples random UNMASKED actions for each agent in obs."""
         
     actions = {
+        #a_obs['action_mask'] defined in ai_ChinaEcon\foundation\base\base_env.py:702
         a_idx: sample_random_action(env.get_agent(a_idx), a_obs['action_mask'])
         for a_idx, a_obs in obs.items()
     }
