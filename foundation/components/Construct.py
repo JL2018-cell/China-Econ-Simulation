@@ -134,8 +134,8 @@ class Construct(BaseComponent):
             #localGov is free to build or break its industries.
             for entity in self.required_entities:
                 #masks[agent.idx][entity] = np.array([True, True]) #np.array([build, break])
-                masks[agent.idx]["build_" + entity] = np.array([True, True])
-                masks[agent.idx]["break_" + entity] = np.array([True, True])
+                masks[agent.idx]["build_" + entity] = np.array([True])
+                masks[agent.idx]["break_" + entity] = np.array([True])
         return masks
 
 
@@ -193,8 +193,8 @@ class Construct(BaseComponent):
             #return [(entity, 2) for entity in self.required_entities]
             actions = []
             for c in self.required_entities:
-                actions.append(("build_{}".format(c), 2))
-                actions.append(("break_{}".format(c), 2))
+                actions.append(("build_{}".format(c), 1))
+                actions.append(("break_{}".format(c), 1))
             return actions
         return None
 
