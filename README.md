@@ -32,6 +32,9 @@ Defined in line 191 of ai_ChinaEcon\foundation\base\base_component.py
 <li> Complete: evolvement of agents defined in component_step in ai_ChinaEcon\foundation\components\Construct.py </li>
 <p> This relates to actions of agents. </p>
 <li> Building industries involves no cost so far. agent.state["performance"]["GDP"], agent.state["endogenous"]["Labor"], agent.state["performance"]["CO2"], effects to map are skipped temporarily. See component_step() in ai_ChinaEcon\foundation\components\Construct.py</li>
+<li> agent.action_spaces and obs['action_mask'] does not match. </li>
+<p> problem: ai_ChinaEcon\foundation\base\base_env.py: _generate_observations(self, flatten_observations=False, flatten_masks=False), _generate_masks(self, flatten_masks=True)
+ai_ChinaEcon\foundation\scenarios\MacroEcon\layout.py: generate_observations(self) </p>
 
 # Done task
 <li> How to declare localGov and centralGov? </li>
