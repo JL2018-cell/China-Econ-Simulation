@@ -35,6 +35,9 @@ Defined in line 191 of ai_ChinaEcon\foundation\base\base_component.py
 <li> agent.action_spaces and obs['action_mask'] does not match. </li>
 <p> problem: ai_ChinaEcon\foundation\base\base_env.py: _generate_observations(self, flatten_observations=False, flatten_masks=False), _generate_masks(self, flatten_masks=True)
 ai_ChinaEcon\foundation\scenarios\MacroEcon\layout.py: generate_observations(self) </p>
+<li> Compute rewards for each agent. </li>
+<p> See ai_ChinaEcon\foundation\scenarios\MacroEcon\layout.py line 74 of 123 </p>
+
 
 # Done task
 <li> How to declare localGov and centralGov? </li>
