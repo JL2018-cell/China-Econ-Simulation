@@ -1,5 +1,9 @@
 # China-Econ-Simulation
 
+<h1> Current Status </h1>
+<li> Can run normally without bugs. </li>
+<li> Needs more variables to track status of agents. </li>
+
 <p> Files editing: </p>
 <li> China-Econ-Simulation/econSimul.py </li>
 <p> Main program </p>
