@@ -71,8 +71,13 @@ class MacroEconLayout(BaseEnvironment):
   'set_agent_component_action', 'step', 'toCarbonEffcy', 'toGDPEffcy', 'world', 'world_size']
   """
 
+  #Assume reward function is known
   def compute_reward(self):
-      return {0:0}
+      rewards = {}
+      for agent in self.world.agents:
+        rewards[agent.idx] = sum(agent.state['inventory'].values()) + sum(agent.state['endogenous'].values())
+      print("In layout, rewards:", rewards)
+      return rewards
 
   def generate_observations(self):
       #Include ALL agents and object in this world. Refer to ai_ChinaEcon\foundation\base\base_env.py:648
