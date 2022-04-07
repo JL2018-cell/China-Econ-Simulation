@@ -364,6 +364,7 @@ class World:
         self,
         world_size,
         n_agents,
+        agent_names,
         world_resources,
         world_landmarks,
         multi_action_mode_agents,
@@ -371,6 +372,7 @@ class World:
     ):
         self.world_size = world_size
         self.n_agents = n_agents
+        self.agent_names = agent_names
         self.resources = world_resources
         self.landmarks = world_landmarks
         self.multi_action_mode_agents = bool(multi_action_mode_agents)
@@ -382,7 +384,7 @@ class World:
         mobile_class = agent_registry.get("localGov")
         planner_class = agent_registry.get("centralGov")
         self._agents = [
-            mobile_class(i, multi_action_mode=self.multi_action_mode_agents)
+            mobile_class(i, multi_action_mode=self.multi_action_mode_agents, agent_name = self.agent_names[i])
             for i in range(self.n_agents)
         ]
         self._planner = planner_class(multi_action_mode=self.multi_action_mode_planner)
