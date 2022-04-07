@@ -179,6 +179,7 @@ class BaseEnvironment(ABC):
         self,
         components=None,
         n_agents=None,
+        agent_names=None,
         world_size=None,
         episode_length=1000,
         multi_action_mode_agents=False,
@@ -220,8 +221,10 @@ class BaseEnvironment(ABC):
 
         # Number of agents must be an integer and there must be at least 2 agents
         assert isinstance(n_agents, int)
+        assert isinstance(agent_names, list)
         assert n_agents >= 2
         self.n_agents = n_agents
+        self.agent_names = agent_names
 
         # Foundation assumes there's only a single planner
         n_planners = 1
@@ -318,6 +321,7 @@ class BaseEnvironment(ABC):
         self.world = World(
             self.world_size,
             self.n_agents,
+            self.agent_names,
             self.resources,
             self.landmarks,
             self.multi_action_mode_agents,
