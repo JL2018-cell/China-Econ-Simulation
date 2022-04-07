@@ -176,9 +176,7 @@ class ContinuousDoubleAuction(BaseComponent):
 
         # The agent is past the max number of orders
         # or doesn't have enough money, do nothing
-        if (not self.can_bid(resource, agent)) or agent.state["inventory"][
-            "Coin"
-        ] < max_payment:
+        if (not self.can_bid(resource, agent)) or agent.state["inventory"]["Agriculture"] + agent.state["inventory"]["Energy"] < max_payment:
             return
 
         assert self.price_floor <= max_payment <= self.price_ceiling
@@ -427,12 +425,20 @@ class ContinuousDoubleAuction(BaseComponent):
                     ("Sell_{}".format(c), 1 + self.max_bid_ask)
                 )  # How much need to receive to sell c
             return trades
+
         if agent_cls_name == "localGov":
             trades = []
             for c in self.required_entities:
                 trades.append(("Buy_{}".format(c), 1 + self.max_bid_ask))
                 trades.append(("Sell_{}".format(c), 1 + self.max_bid_ask))
             return trades
+
+        if agent_cls_name == "centralGov":
+            charges = []
+            for c in self.required_entities:
+                charges.append(("charge_{}".format(c), 1 + self.max_bid_ask))
+            return charges
+
         return None
 
     def get_additional_state_fields(self, agent_cls_name):
