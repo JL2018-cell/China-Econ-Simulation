@@ -36,6 +36,14 @@ class Transport(BaseComponent):
     def get_additional_state_fields(self, agent_cls_name):
       return {}
     def get_n_actions(self, agent_cls_name):
-      return []
+        if agent_cls_name == "localGov":
+            #Inappropriate. This is telling agent can move in 2 direction in world map.
+            #return [(entity, 2) for entity in self.required_entities]
+            actions = []
+            for c in self.required_entities:
+                actions.append(("in_{}".format(c), 1))
+                actions.append(("out_{}".format(c), 1))
+            return actions
+        return []
 
 
