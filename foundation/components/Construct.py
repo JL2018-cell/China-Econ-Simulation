@@ -131,11 +131,22 @@ class Construct(BaseComponent):
         masks = {}
         for agent in self.world.agents:
             masks[agent.idx] = {}
-            #localGov is free to build or break its industries.
-            for entity in self.required_entities:
-                #masks[agent.idx][entity] = np.array([True, True]) #np.array([build, break])
-                masks[agent.idx]["build_" + entity] = np.array([True])
-                masks[agent.idx]["break_" + entity] = np.array([True])
+            if isinstance(agent.idx, int):
+                #localGov is free to build or break its industries.
+                for entity in self.required_entities:
+                    #masks[agent.idx][entity] = np.array([True, True]) #np.array([build, break])
+                    masks[agent.idx]["build_" + entity] = np.array([True])
+                    masks[agent.idx]["break_" + entity] = np.array([True])
+            else:
+                    masks[agent.idx]["store_" + entity] = np.array([True])
+                    masks[agent.idx]["release_" + entity] = np.array([True])
+
+        agent = self.world.planner
+        masks[agent.idx] = {}
+        for entity in self.required_entities:
+            masks[agent.idx]["store_{}".format(entity)] = np.array([True])
+            masks[agent.idx]["release_{}".format(entity)] = np.array([True])
+
         return masks
 
 
@@ -196,6 +207,14 @@ class Construct(BaseComponent):
                 actions.append(("build_{}".format(c), 1))
                 actions.append(("break_{}".format(c), 1))
             return actions
+
+        if agent_cls_name == "centralGov":
+            actions = []
+            for c in self.required_entities:
+                actions.append(("store_{}".format(c), 1))
+                actions.append(("release_{}".format(c), 1))
+            return actions
+
         return None
 
 
