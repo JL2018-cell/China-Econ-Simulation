@@ -73,7 +73,8 @@ env_config = {
     'scenario_name': 'layout/MacroEcon',
     #to be contnued after layout construction on foundation/scenarios/MacroEcon.
     'world_size': [100, 100],
-    'n_agents': 10,
+    'n_agents': 3,
+    'agent_names': ["GuangDong", "HeBei", "XinJiang"],
 
     'components': [
         #Build industries
@@ -85,6 +86,13 @@ env_config = {
     ],
     'industries': ['Agriculture', 'Energy', 'Finance', \
                    'IT', 'Minerals', 'Tourism'], #Help to define actions of localGov
+
+
+    # In multi-action-mode, the policy selects an action for each action subspace (defined in component code).
+    # Otherwise, the policy selects only 1 action.
+    'multi_action_mode_agents': True,
+    'multi_action_mode_planner': True,
+
 
     # (optional) kwargs of the chosen scenario class
     'starting_agent_resources': {"Food": 10., "Energy": 10.} #food, energy
@@ -131,21 +139,13 @@ actions = sample_random_actions(env, obs)
 #call step to advance the state and advance time by one tick.
 obs, rew, done, info = env.step(actions)
 
-
-"""
-
-def sample_random_actions(env, obs):
-    #Samples random UNMASKED actions for each agent in obs.
-        
-    actions = {
-        a_idx: sample_random_action(env.get_agent(a_idx), a_obs['action_mask'])
-        for a_idx, a_obs in obs.items()
-    }
-
-    return actions
-
-actions = sample_random_actions(env, obs)
-
-obs, rew, done, info = env.step(actions)
-
-"""
+print("Computation done.")
+print("obs.keys:\n", obs.keys())
+print("Investigate items.")
+for key, val in obs['0'].items(): 
+    print("{:50} {}".format(key, type(val)))
+print("Reward of agents.")
+for agent_idx, reward in rew.items(): 
+    print("{:2} {:.3f}".format(agent_idx, reward))
+print("Done")
+print(done)
