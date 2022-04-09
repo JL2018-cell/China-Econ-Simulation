@@ -19,24 +19,14 @@
 <p> See component_step() in ai_ChinaEcon\foundation\components\Construct.py </p>
 
 # Current task
+<li> Impose limit of Energy, Agriculture industry growth rate on local Gov. </li>
+<p> Impose upper bound of building agriculture, energy industry per time step. Defined in env_config. </p>
 <li> How to insert final data and intermediate data into model? </li>
-<li> Include industry names into states of agents. To record how agent develop the industry. </li>
-<li> Change location of localGov in world map. Different provinces have different locations. Their distances between one another affects transport cost. </li>
-<li> Consider enabling "multi_action_mode" because government can carry out >1 policy simultaneously. </li>
 <li> Building industries involves no cost so far. agent.state["performance"]["GDP"], agent.state["endogenous"]["Labor"], agent.state["performance"]["CO2"], effects to map are skipped temporarily. See component_step() in ai_ChinaEcon\foundation\components\Construct.py</li>
-<li> Compute rewards for each agent. </li>
-<p> See ai_ChinaEcon\foundation\scenarios\MacroEcon\layout.py line 74 of 123 </p>
-<p> For example, ['Agriculture', 'Energy', 'Finance', 'IT', 'Minerals', 'Tourism']
-10 * 'Agriculture'
-+ 10 * 'Energy'
-+ 1 * 'Finance'
-+ 2 * 'IT'
-+ 10 * 'Minerals'
-+ 5 * 'Tourism' </p>
-<li> Define position and name of each agent. </li>
-<p> e.g. (0,0), "GuangDong" </p>
+
 
 # Done task
+
 <li> How to declare localGov and centralGov? </li>
 <p> Used in returning observation (China-Econ-Simulation/foundation/scenarios/MacroEcon/Layout.py)
 Solution: Defined in 'n_agents': 10 in dictionary env_config at the main program. i.e. econSimul.py
@@ -74,8 +64,26 @@ ai_ChinaEcon\foundation\scenarios\MacroEcon\layout.py: generate_observations(sel
 
 <li> (Done) Make action mask and action consistent. </li>
 
+<li> Compute rewards for each agent. </li>
+<p> See ai_ChinaEcon\foundation\scenarios\MacroEcon\layout.py line 74 of 123 </p>
+<p> For example, ['Agriculture', 'Energy', 'Finance', 'IT', 'Minerals', 'Tourism']
+10 * 'Agriculture'
++ 10 * 'Energy'
++ 1 * 'Finance'
++ 2 * 'IT'
++ 10 * 'Minerals'
++ 5 * 'Tourism' </p>
 
-#Further improvement
+<li> Define position and name of each agent. </li>
+<p> e.g. (0,0), "GuangDong" </p>
+
+<li> Include industry names into states of agents. To record how agent develop the industry. </li>
+
+<li> Consider enabling "multi_action_mode" because government can carry out >1 policy simultaneously. </li>
+
+<li> Change location of localGov in world map. Different provinces have different locations. Their distances between one another affects transport cost. </li>
+
+# Further improvement
 <li> Actions of agents are not defined in compact way. </li>
 <p> e.g. build_Finance, destroy_Finance -> construct.Finance, action dimension = 2. </p>
 
