@@ -27,7 +27,7 @@ class MacroEconLayout(BaseEnvironment):
   """
   
   agent_subclasses = ["LocalGov", "CentralGov"]
-  required_industries = ["Agriculture", "Minerals", "Energy"]
+  required_industries = ['Agriculture', 'Energy', 'Finance', 'IT', 'Minerals', 'Tourism']
   required_entities = required_industries
 
   def __init__(self, starting_agent_resources, industries, **kwargs):
@@ -72,7 +72,21 @@ class MacroEconLayout(BaseEnvironment):
   """
 
   def compute_reward(self):
-      return {0:0}
+      #weights = {k:1 for k in agent.state['inventory'].keys()}
+      #for endogn in agent.state['endogenous']:
+      #    weights[endogn] = agent.state['endogenous'][endogn]
+      #weights = np.array(list(agent.state['inventory'].keys()) \
+      #                   + list(agent.state['endogenous'].keys()))
+
+      #Reward = linear combination of ['Agriculture', 'Energy', 'Finance', 'IT', 'Minerals', 'Tourism', 'CO2', 'GDP', 'Labor']
+      #Assume all weights = 1
+      rewards = {}
+      for agent in self.world.agents:
+        #rewards[agent.idx] = sum(agent.state['inventory'].values()) + sum(agent.state['endogenous'].values())
+        weights = np.array([1 for i in list(agent.state['inventory'].keys()) + list(agent.state['endogenous'].keys())])
+        rewards[agent.idx] = np.dot(np.array(list(agent.state['inventory'].values()) + list(agent.state['endogenous'].values())), weights)
+      print("In layout, rewards:", rewards)
+      return rewards
 
   def generate_observations(self):
       #Include ALL agents and object in this world. Refer to ai_ChinaEcon\foundation\base\base_env.py:648
