@@ -37,80 +37,28 @@ class Resource:
 resource_registry = Registry(Resource)
 
 
-#@resource_registry.add
-#class Wood(Resource):
-#    """Wood resource. collectible."""
-#
-#    name = "Wood"
-#    color = np.array([107, 143, 113]) / 255.0
-#    collectible = True
-
-
 @resource_registry.add
-class Agriculture(Resource):
-    """Agriculture industry"""
+class Wood(Resource):
+    """Wood resource. collectible."""
 
-    name = "Agriculture"
-    color = np.array([107, 143, 113]) / 255.0
-    collectible = True
-
-@resource_registry.add
-class Minerals(Resource):
-    """Minerals industry"""
-
-    name = "Minerals"
-    color = np.array([107, 143, 113]) / 255.0
-    collectible = True
-
-@resource_registry.add
-class Energy(Resource):
-    """Minerals industry"""
-
-    name = "Energy"
+    name = "Wood"
     color = np.array([107, 143, 113]) / 255.0
     collectible = True
 
 
 @resource_registry.add
-class Tourism(Resource):
-    """Minerals industry"""
+class Stone(Resource):
+    """Stone resource. collectible."""
 
-    name = "Tourism"
-    color = np.array([107, 143, 113]) / 255.0
+    name = "Stone"
+    color = np.array([241, 233, 219]) / 255.0
     collectible = True
 
 
 @resource_registry.add
-class IT(Resource):
-    """Minerals industry"""
+class Coin(Resource):
+    """Coin resource. Included in all environments by default. Not collectible."""
 
-    name = "IT"
-    color = np.array([107, 143, 113]) / 255.0
-    collectible = True
-
-
-@resource_registry.add
-class Finance(Resource):
-    """Minerals industry"""
-
-    name = "Finance"
-    color = np.array([107, 143, 113]) / 255.0
-    collectible = True
-
-
-#@resource_registry.add
-#class Stone(Resource):
-#    """Stone resource. collectible."""
-#
-#    name = "Stone"
-#    color = np.array([241, 233, 219]) / 255.0
-#    collectible = True
-
-
-#@resource_registry.add
-#class Coin(Resource):
-#    """Coin resource. Included in all environments by default. Not collectible."""
-#
-#    name = "Coin"
-#    color = np.array([229, 211, 82]) / 255.0
-#    collectible = False
+    name = "Coin"
+    color = np.array([229, 211, 82]) / 255.0
+    collectible = False

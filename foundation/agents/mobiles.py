@@ -6,29 +6,13 @@
 
 from foundation.base.base_agent import BaseAgent, agent_registry
 
+
 @agent_registry.add
-class localGov(BaseAgent):
+class BasicMobileAgent(BaseAgent):
     """
     A basic mobile agent represents an individual actor in the economic simulation.
+
+    "Mobile" refers to agents of this type being able to move around in the 2D world.
     """
 
-    name = "localGov"
-    #preference = {} 
-    #{inv: 0.5 for inv in self._registered_inventory}
-    def __init__(self, idx=None, multi_action_mode=None):
-        BaseAgent.__init__(self, idx=None, multi_action_mode=None)
-        self.industries = ['Agriculture', 'Energy', 'Finance', 'IT', 'Minerals', 'Tourism']
-        self.preference = {inv: 0.5 for inv in self.industries}
-        #self.preference = {inv: 0.5 for inv in self._registered_inventory}
-        #(Pdb) p self.state
-        #{'loc': [0, 0], 'inventory': {}, 'escrow': {}, 'endogenous': {}}
-
-#@agent_registry.add
-#class BasicMobileAgent(BaseAgent):
-#    """
-#    A basic mobile agent represents an individual actor in the economic simulation.
-#
-#    "Mobile" refers to agents of this type being able to move around in the 2D world.
-#    """
-#
-#    name = "BasicMobileAgent"
+    name = "BasicMobileAgent"

@@ -36,8 +36,8 @@ class ContinuousDoubleAuction(BaseComponent):
 
     name = "ContinuousDoubleAuction"
     component_type = "Trade"
-    required_entities = ["Agriculture", "Minerals", "Energy", "Tourism", "IT", "Finance"]
-    agent_subclasses = ["localGov"]
+    required_entities = ["Coin", "Labor"]
+    agent_subclasses = ["BasicMobileAgent"]
 
     def __init__(
         self,
@@ -427,12 +427,7 @@ class ContinuousDoubleAuction(BaseComponent):
                     ("Sell_{}".format(c), 1 + self.max_bid_ask)
                 )  # How much need to receive to sell c
             return trades
-        if agent_cls_name == "localGov":
-            trades = []
-            for c in self.required_entities:
-                trades.append(("Buy_{}".format(c), 1 + self.max_bid_ask))
-                trades.append(("Sell_{}".format(c), 1 + self.max_bid_ask))
-            return trades
+
         return None
 
     def get_additional_state_fields(self, agent_cls_name):
@@ -561,7 +556,7 @@ class ContinuousDoubleAuction(BaseComponent):
         for agent in world.agents:
             masks[agent.idx] = {}
 
-            can_pay = np.arange(self.max_bid_ask + 1) <= agent.inventory["Agriculture"] + agent.inventory["Energy"]
+            can_pay = np.arange(self.max_bid_ask + 1) <= agent.inventory["Coin"]
 
             for resource in self.commodities:
                 if not self.can_ask(resource, agent):  # asks_maxed:
