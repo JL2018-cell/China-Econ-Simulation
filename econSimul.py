@@ -73,7 +73,13 @@ env_config = {
     'scenario_name': 'layout/MacroEcon',
     #to be contnued after layout construction on foundation/scenarios/MacroEcon.
     'world_size': [100, 100],
-    'n_agents': 10,
+    'n_agents': 3,
+    'agent_names': ["GuangDong", "HeBei", "XinJiang"],
+    'agent_locs': [(80, 10), (50, 50), (10, 60)],
+    'multi_action_mode_agents': True,
+    'allow_observation_scaling': False,
+    # Upper limit of industries that localGov can build per timestep.
+    'buildUpLimit': 10,
 
     'components': [
         #Build industries
@@ -83,6 +89,8 @@ env_config = {
         #Exchange resources, industry points by auction.
         {'ContinuousDoubleAuction': {'max_num_orders': 5}},
     ],
+
+    # Industries available in this world.
     'industries': ['Agriculture', 'Energy', 'Finance', \
                    'IT', 'Minerals', 'Tourism'], #Help to define actions of localGov
 
@@ -131,6 +139,17 @@ actions = sample_random_actions(env, obs)
 #call step to advance the state and advance time by one tick.
 obs, rew, done, info = env.step(actions)
 
+
+print("Computation done.")
+print("obs.keys:\n", obs.keys())
+print("Investigate items.")
+for key, val in obs['0'].items(): 
+    print("{:50} {}".format(key, type(val)))
+print("Reward of agents.")
+for agent_idx, reward in rew.items(): 
+    print("{:2} {:.3f}".format(agent_idx, reward))
+print("Done")
+print(done)
 
 """
 
