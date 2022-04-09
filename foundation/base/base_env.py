@@ -179,7 +179,10 @@ class BaseEnvironment(ABC):
         self,
         components=None,
         n_agents=None,
+        agent_names=None,
+        agent_locs=None,
         world_size=None,
+        buildUpLimit = 10,
         episode_length=1000,
         multi_action_mode_agents=False,
         multi_action_mode_planner=True,
@@ -220,8 +223,16 @@ class BaseEnvironment(ABC):
 
         # Number of agents must be an integer and there must be at least 2 agents
         assert isinstance(n_agents, int)
+        assert isinstance(agent_names, list)
+        assert isinstance(agent_locs, list)
         assert n_agents >= 2
+        assert n_agents == len(agent_names) == len(agent_locs)
         self.n_agents = n_agents
+        self.agent_names = agent_names
+        self.agent_locs = agent_locs
+
+        # Upper limit of industries that localGov can build per timestep.
+        self.buildUpLimit = buildUpLimit
 
         # Foundation assumes there's only a single planner
         n_planners = 1
@@ -287,7 +298,6 @@ class BaseEnvironment(ABC):
             self.seed(seed)
 
         # Initialize the set of entities used in the game that's being created.
-        # Coin and Labor are always included.
         self._entities = {
             "resources": [],
             "landmarks": [],
@@ -318,6 +328,9 @@ class BaseEnvironment(ABC):
         self.world = World(
             self.world_size,
             self.n_agents,
+            self.agent_names,
+            self.agent_locs,
+            self.buildUpLimit,
             self.resources,
             self.landmarks,
             self.multi_action_mode_agents,
