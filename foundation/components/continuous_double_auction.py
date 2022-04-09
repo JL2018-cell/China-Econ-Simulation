@@ -5,7 +5,7 @@
 # or https://opensource.org/licenses/BSD-3-Clause
 
 import numpy as np
-
+import random
 from foundation.base.base_component import (
     BaseComponent,
     component_registry,
@@ -176,9 +176,7 @@ class ContinuousDoubleAuction(BaseComponent):
 
         # The agent is past the max number of orders
         # or doesn't have enough money, do nothing
-        if (not self.can_bid(resource, agent)) or agent.state["inventory"][
-            "Coin"
-        ] < max_payment:
+        if (not self.can_bid(resource, agent)) or agent.state["inventory"]["Agriculture"] + agent.state["inventory"]["Energy"] < max_payment:
             return
 
         assert self.price_floor <= max_payment <= self.price_ceiling
@@ -192,7 +190,7 @@ class ContinuousDoubleAuction(BaseComponent):
 
         # Set aside whatever money the agent is willing to pay
         # (will get excess back if price ends up being less)
-        _ = agent.inventory_to_escrow("Coin", int(max_payment))
+        _ = agent.inventory_to_escrow(random.choice(self.resources), int(max_payment))
 
         # Incur the labor cost of creating an order
         agent.state["endogenous"]["Labor"] += self.order_labor
