@@ -19,6 +19,7 @@
 <p> See component_step() in ai_ChinaEcon\foundation\components\Construct.py </p>
 
 # Current task
+<li> Let agents (localGov) act intelligently, instead of randomly. </li>
 <li> Impose limit of Energy, Agriculture industry growth rate on local Gov. </li>
 <p> Impose upper bound of building agriculture, energy industry per time step. Defined in env_config. </p>
 <li> How to insert final data and intermediate data into model? </li>
@@ -26,7 +27,6 @@
 
 
 # Done task
-
 <li> How to declare localGov and centralGov? </li>
 <p> Used in returning observation (China-Econ-Simulation/foundation/scenarios/MacroEcon/Layout.py)
 Solution: Defined in 'n_agents': 10 in dictionary env_config at the main program. i.e. econSimul.py
