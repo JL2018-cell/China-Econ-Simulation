@@ -42,7 +42,7 @@ The computation not agree with MacroEcon setting. Should change it. </p>
 <p> ai_ChinaEcon\foundation\base\base_env.py: 653 </p>
 <li> Setting of payment: choose resource (industry) to pay randomly. This is not good. </li>
 <p> ai_ChinaEcon\foundation\components\continuous_double_auction.py: 193 </>
-
+<li> Generate action mask for building industries over resource points. </li>
   
 
 # Done task
