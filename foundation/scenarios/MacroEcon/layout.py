@@ -31,6 +31,8 @@ class MacroEconLayout(BaseEnvironment):
   required_entities = required_industries
 
   def __init__(self, starting_agent_resources, industries, **kwargs):
+    #Total CO2 emission of all localGov.
+    self.total_CO2 = 0.
     self.world_size = [100, 100]
     self.energy_cost = 100
     self.expn_per_day = 100
@@ -91,19 +93,16 @@ class MacroEconLayout(BaseEnvironment):
   def generate_observations(self):
       #Include ALL agents and object in this world. Refer to ai_ChinaEcon\foundation\base\base_env.py:648
       obs = {}
-      obs[self.world.planner.idx] = {
-          "industry-" + k: v * self.inv_scale
-          for k, v in self.world.planner.inventory.items()
-      }
-      #Show location of modelled provinces/lcal government
-      #obs['map'] = self.world.maps.state
-
-      #for agent in self.world.agents:
-      #for planner in self.world.planners:
-      """
-      #refer to ai_ChinaEcon_v2\foundation\base\world.py
-      #Local government i: {"Industry-Agriculture": points, "Resources": points}
-      """
+      #Observe agents
+      for agent in self.world.agents:
+          obs[str(agent.idx)] = {}
+          obs[str(agent.idx)]['actions'] = [act for act, b in self.world.agents[0]._multi_action_dict.items() if b]
+          obs[str(agent.idx)]['industries'] = agent.state['inventory']
+          obs[str(agent.idx)]['endogenous'] = agent.state['endogenous']
+      #Observe planner
+      obs[self.world.planner.idx] = {}
+      obs[self.world.planner.idx]['actions'] = self.world.planner.action
+      obs[self.world.planner.idx]['storage'] = self.world.planner.inventory
       return obs
 
   def reset_agent_states(self):
@@ -115,6 +114,7 @@ class MacroEconLayout(BaseEnvironment):
       self.energy = 100.
 
   def scenario_step(self):
+      self.total_CO2 = sum([agent.state['endogenous']['CO2'] for agent in self.world.agents])
       self.agric += 1.
       self.energy += 1.
 
