@@ -43,7 +43,9 @@ The computation not agree with MacroEcon setting. Should change it. </p>
 <li> Setting of payment: choose resource (industry) to pay randomly. This is not good. </li>
 <p> ai_ChinaEcon\foundation\components\continuous_double_auction.py: 193 </>
 <li> Generate action mask for building industries over resource points. </li>
-  
+<li> RL: Given state -> nextstate, compute action required using e.g. Q-learning. </li>
+<li> Curriculum learning </li>
+<p> BuildUpLimit ~ reward. > BuildUpLimit -> punishment. Otherwise, reward. This has small magnitude at beginning but larger later. </p>
 
 # Done task
 <li> How to declare localGov and centralGov? </li>
