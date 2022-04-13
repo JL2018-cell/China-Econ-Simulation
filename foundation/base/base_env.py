@@ -1012,9 +1012,11 @@ class BaseEnvironment(ABC):
 
         self.world.timestep += 1
 
+        #Status of agents are updated.
         for component in self._components:
             component.component_step()
 
+        #Status of world are updated.
         self.scenario_step()
 
         obs = self._generate_observations(
