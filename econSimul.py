@@ -9,63 +9,6 @@ from foundation.components.Transport import Transport
 import foundation
 import numpy as np
 
-@resource_registry.add
-class Widget(Resource):
-    name = "Widget"
-    color = [1, 1, 1]
-    collectible = False # <--- Goes in agent inventory, but not in the world
-
-@component_registry.add
-class BuyWidgetFromVirtualStore(BaseComponent):
-    name = "BuyWidgetFromVirtualStore"
-    required_entities = ["Coin", "Widget"]  # <--- We can now look up "Widget" in the resource registry
-    agent_subclasses = ["BasicMobileAgent"]
-
-    def __init__(
-        self,
-        *base_component_args,
-        widget_refresh_rate=0.1,
-        **base_component_kwargs
-    ):
-        super().__init__(*base_component_args, **base_component_kwargs)
-        self.widget_refresh_rate = widget_refresh_rate
-        self.available_widget_units = 0
-        self.widget_price = 5
-
-def get_n_actions(self, agent_cls_name):
-    # This component adds 1 binary action that mobile agents can take: buy widget (or not).
-    if agent_cls_name == "BasicMobileAgent":
-        return 1  # Buy or not.
-
-    return None
-
-def generate_masks(self, completions=0):
-    masks = {}
-    # Mobile agents' buy action is masked if they cannot build with their
-    # current coin or if no widgets are available.
-    for agent in self.world.agents:
-        masks[agent.idx] = np.array([
-            agent.state["inventory"]["Coin"] >= self.widget_price and self.available_widget_units > 0
-        ])
-
-    return masks
-
-@agent_registry.add
-class province(BaseAgent):
-    name = "GuangDong"
-
-#industries
-new_rsc_cls = resource_registry.get("Widget")
-print(new_rsc_cls)
-
-
-new_cmp_cls = component_registry.get("BuyWidgetFromVirtualStore")
-print(new_cmp_cls)
-
-#Province
-new_agn_cls = agent_registry.get("GuangDong")
-print(new_agn_cls)
-print(dir(new_cmp_cls))
 
 
 
@@ -80,6 +23,8 @@ env_config = {
     'allow_observation_scaling': False,
     # Upper limit of industries that localGov can build per timestep.
     'buildUpLimit': 10,
+    'episode_length': 10, # Number of timesteps per episode
+    'flatten_observations': False,
 
     'components': [
         #Build industries
@@ -98,30 +43,42 @@ env_config = {
     'starting_agent_resources': {"Food": 10., "Energy": 10.} #food, energy
 }
 
-print("MacroEconLayout:", MacroEconLayout)
-
-test_env_cls = scenario_registry.get("layout/MacroEcon")
-print("scenario_registry.get:", test_env_cls)
-
 env = foundation.make_env_instance(**env_config)
 
-print("get agent")
-print(env.get_agent(0))
-
-#call ai_ChinaEcon\foundation\base\base_env.py:852
 obs = env.reset()
 
 def sample_random_action(agent, mask):
     """Sample random UNMASKED action(s) for agent."""
+    if agent.idx != 'p': #Not a planner
+        actions_limit = ['Construct']
+        limit_sum = sum([sum([act_lt in action_name for action_name in agent._action_names]) for act_lt in actions_limit])
     # Return a list of actions: 1 for each action subspace
     if agent.multi_action_mode:
-        split_masks = np.split(mask, agent.action_spaces.cumsum()[:-1])
-        return [np.random.choice(np.arange(len(m_)), p=m_/m_.sum()) for m_ in split_masks]
+        #Classify a 1D array to different actions.
+        #'Construct.build_Agriculture', 'Construct.break_Agriculture', 'Construct.build_Energy',
+        #'Construct.break_Energy', 'Construct.build_Finance', 'Construct.break_Finance', 
+        #'Construct.build_IT', 'Construct.break_IT', 'Construct.build_Minerals',
+        #'Construct.break_Minerals', 'Construct.build_Tourism', 'Construct.break_Tourism', 
+        #'ContinuousDoubleAuction.Buy_Agriculture', 
+        #'ContinuousDoubleAuction.Sell_Agriculture', 'ContinuousDoubleAuction.Buy_Minerals', 
+        #'ContinuousDoubleAuction.Sell_Minerals', 'ContinuousDoubleAuction.Buy_Energy', 
+        #'ContinuousDoubleAuction.Sell_Energy', 'ContinuousDoubleAuction.Buy_Tourism', 
+        #'ContinuousDoubleAuction.Sell_Tourism', 'ContinuousDoubleAuction.Buy_IT', 
+        #'ContinuousDoubleAuction.Sell_IT', 'ContinuousDoubleAuction.Buy_Finance', 
+        #'ContinuousDoubleAuction.Sell_Finance'
+        if agent.idx != 'p': #Not a planner
+            temp_actions = [agent.buildUpLimit + 1]
+            while sum(temp_actions[0:limit_sum]) > agent.buildUpLimit:
+                split_masks = np.split(mask, agent.action_spaces.cumsum()[:-1])
+                temp_actions = [np.random.choice(np.arange(len(m_)), p=m_/m_.sum()) for m_ in split_masks]
+            return temp_actions
+        else: #agent is centralGov/planner
+            split_masks = np.split(mask, agent.action_spaces.cumsum()[:-1])
+            return [np.random.choice(np.arange(len(m_)), p=m_/m_.sum()) for m_ in split_masks]
 
     # Return a single action
     else:
         return np.random.choice(np.arange(agent.action_spaces), p=mask/mask.sum())
-
 
 def sample_random_actions(env, obs):
     """Samples random UNMASKED actions for each agent in obs."""
@@ -134,11 +91,14 @@ def sample_random_actions(env, obs):
 
     return actions
 
-
+#Alternative: Write intelligent code to choose optimal actions.
 actions = sample_random_actions(env, obs)
 #call step to advance the state and advance time by one tick.
+#This is 1 step only.
 obs, rew, done, info = env.step(actions)
-
+#Repeat until done.
+while not done["__all__"]:
+    obs, rew, done, info = env.step(actions)
 
 print("Computation done.")
 print("obs.keys:\n", obs.keys())
