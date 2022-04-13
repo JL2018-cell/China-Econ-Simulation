@@ -16,7 +16,7 @@ class localGov(BaseAgent):
     #preference = {} 
     #{inv: 0.5 for inv in self._registered_inventory}
     def __init__(self, loc, buildUpLimit, idx=None, multi_action_mode=None):
-        BaseAgent.__init__(self, idx=idx, multi_action_mode=None)
+        BaseAgent.__init__(self, idx=idx, multi_action_mode=multi_action_mode)
         self.state["loc"] = loc
         self.buildUpLimit = buildUpLimit
         self.industries = ['Agriculture', 'Energy', 'Finance', 'IT', 'Minerals', 'Tourism']
