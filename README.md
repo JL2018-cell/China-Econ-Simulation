@@ -47,6 +47,13 @@ The computation not agree with MacroEcon setting. Should change it. </p>
 <li> Curriculum learning </li>
 <p> BuildUpLimit ~ reward. > BuildUpLimit -> punishment. Otherwise, reward. This has small magnitude at beginning but larger later. </p>
 <li> Know action dimension & action magnitude in def generate_n_actions() of each component. </li>
+<p> <ul>
+       <li> agent.reset_actions() in ai_ChinaEcon\foundation\base\base_env.py line 1034 of 1166 </li>
+       <li> agent.parse_actions() in mobiles.py </li>
+    </ul>
+</p>
+
+
 
 # Done task
 <li> How to declare localGov and centralGov? </li>
