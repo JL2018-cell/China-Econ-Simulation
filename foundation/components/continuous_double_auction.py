@@ -431,6 +431,12 @@ class ContinuousDoubleAuction(BaseComponent):
                 trades.append(("Buy_{}".format(c), 1 + self.max_bid_ask))
                 trades.append(("Sell_{}".format(c), 1 + self.max_bid_ask))
             return trades
+        if agent_cls_name == "centralGov":
+            charges = []
+            for c in self.required_entities:
+                charges.append(("charge_{}".format(c), 1 + self.max_bid_ask))
+                charges.append(("release_{}".format(c), 1 + self.max_bid_ask))
+            return charges
         return None
 
     def get_additional_state_fields(self, agent_cls_name):
@@ -579,6 +585,11 @@ class ContinuousDoubleAuction(BaseComponent):
                     masks[agent.idx]["Buy_{}".format(resource)] = can_pay.astype(
                         np.int32
                     )
+
+        masks[self.world.planner.idx] = {}
+        for entity in self.required_entities:
+            masks[self.world.planner.idx]["charge_" + entity] = np.ones(1 + self.max_bid_ask)
+            masks[self.world.planner.idx]["release_" + entity] = np.ones(1 + self.max_bid_ask)
 
         return masks
 
