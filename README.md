@@ -46,6 +46,7 @@ The computation not agree with MacroEcon setting. Should change it. </p>
 <li> RL: Given state -> nextstate, compute action required using e.g. Q-learning. </li>
 <li> Curriculum learning </li>
 <p> BuildUpLimit ~ reward. > BuildUpLimit -> punishment. Otherwise, reward. This has small magnitude at beginning but larger later. </p>
+<li> Know action dimension & action magnitude in def generate_n_actions() of each component. </li>
 
 # Done task
 <li> How to declare localGov and centralGov? </li>
