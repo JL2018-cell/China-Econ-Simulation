@@ -8,9 +8,7 @@ from foundation.components.Construct import Construct
 from foundation.components.Transport import Transport
 import foundation
 import numpy as np
-
-
-
+import random
 
 env_config = {
     'scenario_name': 'layout/MacroEcon',
@@ -22,9 +20,10 @@ env_config = {
     'multi_action_mode_agents': True,
     'allow_observation_scaling': False,
     # Upper limit of industries that localGov can build per timestep.
-    'buildUpLimit': 10,
+    'buildUpLimit': {'Agriculture': 10, 'Energy': 10},
     'episode_length': 10, # Number of timesteps per episode
     'flatten_observations': False,
+    'flatten_masks': False,
 
     'components': [
         #Build industries
@@ -47,38 +46,38 @@ env = foundation.make_env_instance(**env_config)
 
 obs = env.reset()
 
+"""
 def sample_random_action(agent, mask):
-    """Sample random UNMASKED action(s) for agent."""
-    if agent.idx != 'p': #Not a planner
-        actions_limit = ['Construct']
-        limit_sum = sum([sum([act_lt in action_name for action_name in agent._action_names]) for act_lt in actions_limit])
+    #Sample random UNMASKED action(s) for agent.
     # Return a list of actions: 1 for each action subspace
     if agent.multi_action_mode:
-        #Classify a 1D array to different actions.
-        #'Construct.build_Agriculture', 'Construct.break_Agriculture', 'Construct.build_Energy',
-        #'Construct.break_Energy', 'Construct.build_Finance', 'Construct.break_Finance', 
-        #'Construct.build_IT', 'Construct.break_IT', 'Construct.build_Minerals',
-        #'Construct.break_Minerals', 'Construct.build_Tourism', 'Construct.break_Tourism', 
-        #'ContinuousDoubleAuction.Buy_Agriculture', 
-        #'ContinuousDoubleAuction.Sell_Agriculture', 'ContinuousDoubleAuction.Buy_Minerals', 
-        #'ContinuousDoubleAuction.Sell_Minerals', 'ContinuousDoubleAuction.Buy_Energy', 
-        #'ContinuousDoubleAuction.Sell_Energy', 'ContinuousDoubleAuction.Buy_Tourism', 
-        #'ContinuousDoubleAuction.Sell_Tourism', 'ContinuousDoubleAuction.Buy_IT', 
-        #'ContinuousDoubleAuction.Sell_IT', 'ContinuousDoubleAuction.Buy_Finance', 
-        #'ContinuousDoubleAuction.Sell_Finance'
-        if agent.idx != 'p': #Not a planner
-            temp_actions = [agent.buildUpLimit + 1]
-            while sum(temp_actions[0:limit_sum]) > agent.buildUpLimit:
-                split_masks = np.split(mask, agent.action_spaces.cumsum()[:-1])
-                temp_actions = [np.random.choice(np.arange(len(m_)), p=m_/m_.sum()) for m_ in split_masks]
-            return temp_actions
-        else: #agent is centralGov/planner
-            split_masks = np.split(mask, agent.action_spaces.cumsum()[:-1])
-            return [np.random.choice(np.arange(len(m_)), p=m_/m_.sum()) for m_ in split_masks]
+        actions = {k: [1 if random.random() > 0.5 else 0 for elm in v] for k, v in mask.items()}
+        actions = agent.check_actions(actions, reset = False)
+        split_masks = np.split(mask, agent.action_spaces.cumsum()[:-1])
+        return [np.random.choice(np.arange(len(m_)), p=m_/m_.sum()) for m_ in split_masks]
 
     # Return a single action
     else:
         return np.random.choice(np.arange(agent.action_spaces), p=mask/mask.sum())
+"""
+
+
+def sample_random_action(agent, mask):
+    """Sample random UNMASKED action(s) for agent."""
+
+    # Return a list of actions: 1 for each action subspace
+    if agent.multi_action_mode:
+        actions_num = random.randint(1, 3)
+        actions = {}
+        #Sample random actions
+        for _ in range(actions_num):
+            actions = {**actions, **agent.get_random_action()}
+        return actions
+
+    # Return a single action
+    else:
+        return agent.get_random_action()
+
 
 def sample_random_actions(env, obs):
     """Samples random UNMASKED actions for each agent in obs."""
@@ -89,15 +88,23 @@ def sample_random_actions(env, obs):
         for a_idx, a_obs in obs.items()
     }
 
-    return actions
+    #Update actions of agent
+    for a_idx, action in actions.items():
+        if a_idx != 'p':
+            env.world.agents[int(a_idx)].action.update(action)
+        else:
+            env.world.planner.action.update(action)
+
+    return (env, actions)
 
 #Alternative: Write intelligent code to choose optimal actions.
-actions = sample_random_actions(env, obs)
+env, actions = sample_random_actions(env, obs)
 #call step to advance the state and advance time by one tick.
 #This is 1 step only.
 obs, rew, done, info = env.step(actions)
 #Repeat until done.
 while not done["__all__"]:
+    env, actions = sample_random_actions(env, obs)
     obs, rew, done, info = env.step(actions)
 
 print("Computation done.")
