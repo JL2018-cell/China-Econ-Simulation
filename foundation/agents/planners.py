@@ -38,6 +38,8 @@ class centralGov(BaseAgent):
         """
         raise AttributeError("BasicPlanner agents do not occupy a location.")
 
+    def parse_actions(self, actions, reset = False):
+        pass
 
 #@agent_registry.add
 #class BasicPlanner(BaseAgent):
