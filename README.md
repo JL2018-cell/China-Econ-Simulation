@@ -129,6 +129,13 @@ ai_ChinaEcon\foundation\scenarios\MacroEcon\layout.py: generate_observations(sel
 # Further improvement
 <li> Actions of agents are not defined in compact way. </li>
 <p> e.g. build_Finance, destroy_Finance -> construct.Finance, action dimension = 2. </p>
+<li> Parameters to change </li>
+<p> <ul> 
+       <li> Maximum, minimum actions agent can take inn ai_ChinaEcon\econSimul.py </li>
+       <li> Change action dimension in def fet_n_actions construct.py </li>
+     </ul>
+ </p>
+
 
 
 # Coding setting
