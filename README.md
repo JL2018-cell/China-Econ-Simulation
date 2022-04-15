@@ -52,7 +52,10 @@ The computation not agree with MacroEcon setting. Should change it. </p>
        <li> agent.parse_actions() in mobiles.py </li>
     </ul>
 </p>
-
+<li> Change in payment method in Continuous Double Auction. </li>
+<p> ai_ChinaEcon\foundation\components\continuous_double_auction.py, line 332, in match_orders </p>
+<p> buyer.state[escrow][Coin] -= pre_payment </p>
+<p> KeyError: 'Coin' </p>
 
 
 # Done task
