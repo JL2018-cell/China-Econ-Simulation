@@ -136,6 +136,10 @@ class Construct(BaseComponent):
                 #masks[agent.idx][entity] = np.array([True, True]) #np.array([build, break])
                 masks[agent.idx]["build_" + entity] = np.array([True])
                 masks[agent.idx]["break_" + entity] = np.array([True])
+        masks[self.world.planner.idx] = {}
+        for entity in self.required_entities:
+            masks[self.world.planner.idx]["charge_" + entity] = np.array([True])
+            masks[self.world.planner.idx]["release_" + entity] = np.array([True])
         return masks
 
 
@@ -193,9 +197,15 @@ class Construct(BaseComponent):
             #return [(entity, 2) for entity in self.required_entities]
             actions = []
             for c in self.required_entities:
-                actions.append(("build_{}".format(c), 1))
-                actions.append(("break_{}".format(c), 1))
+                actions.append(("build_{}".format(c), 20))
+                actions.append(("break_{}".format(c), 20))
             return actions
+        if agent_cls_name == "centralGov":
+            charges = []
+            for c in self.required_entities:
+                charges.append(("charge_{}".format(c), 20))
+                charges.append(("release_{}".format(c), 20))
+            return charges
         return None
 
 
