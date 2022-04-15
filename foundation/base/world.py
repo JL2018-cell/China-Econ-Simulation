@@ -489,3 +489,5 @@ class World:
     def consume_resource(self, resource_name, r, c):
         """Consume a unit of resource_name from location [r, c]."""
         self.maps.set_point_add(resource_name, r, c, -1)
+
+        
