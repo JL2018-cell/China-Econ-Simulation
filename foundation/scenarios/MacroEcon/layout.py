@@ -39,8 +39,9 @@ class MacroEconLayout(BaseEnvironment):
     self.pt_per_day = 100
     self.toCarbonEffcy = 0.5
     self.toGDPEffcy = 0.5
-    self.GDP_contrib = {"Minerals": 100, "Agriculture": 50}
-    self.CO2_contrib = {"Minerals": 110, "Agriculture": 100} 
+    self.resourcePt_contrib = {"Agriculture": 10, "Energy": 10}
+    self.GDP_contrib = {"Agriculture": 100, "Agriculture": 50}
+    self.CO2_contrib = {"Agriculture": 110, "Agriculture": 100} 
     self.agric = starting_agent_resources["Food"]
     self.energy = starting_agent_resources["Energy"]
     self.resource_points = 100.
@@ -48,30 +49,6 @@ class MacroEconLayout(BaseEnvironment):
     #assert self.starting_agent_coin >= 0.0
     super().__init__(**kwargs)
 
-
-  """ p dir(self)
-  ['__abstractmethods__', '__class__', '__delattr__', '__dict__', '__dir__', 
-  '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__gt__', 
-  '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__module__', 
-  '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', 
-  '__sizeof__', '__slots__', '__str__', '__subclasshook__', '__weakref__', '_abc_impl', 
-  '_agent_lookup', '_allow_observation_scaling', '_build_packager', '_completions', 
-  '_components', '_components_dict', '_create_dense_log_every', '_dense_log', 
-  '_dense_log_this_episode', '_entities', '_episode_length', '_finalize_logs', 
-  '_flatten_masks', '_flatten_observations', '_generate_masks', '_generate_observations', 
-  '_generate_rewards', '_last_ep_dense_log', '_last_ep_metrics', '_last_ep_replay_log', 
-  '_package', '_packagers', '_register_entities', '_replay_log', '_shorthand_lookup', 
-  '_world_dense_log_frequency', 'additional_reset_steps', 'agent_subclasses', 'agric', 
-  'all_agents', 'collate_agent_info', 'collate_agent_obs', 'collate_agent_rew', 
-  'collate_agent_step_and_reset_data', 'components', 'compute_reward', 'dense_log', 
-  'endogenous', 'energy', 'energy_cost', 'episode_length', 'expn_per_day', 'generate_observations', 
-  'generate_rewards', 'get_agent', 'get_component', 'inv_scale', 'landmarks', 'metrics', 
-  'multi_action_mode_agents', 'multi_action_mode_planner', 'n_agents', 'name', 'num_agents', 
-  'parse_actions', 'previous_episode_dense_log', 'previous_episode_metrics', 'previous_episode_replay_log', 
-  'pt_per_day', 'replay_log', 'required_entities', 'required_industries', 'reset', 'reset_agent_states', 
-  'reset_starting_layout', 'resource_points', 'resources', 'scenario_metrics', 'scenario_step', 'seed', 
-  'set_agent_component_action', 'step', 'toCarbonEffcy', 'toGDPEffcy', 'world', 'world_size']
-  """
 
   def compute_reward(self):
       #weights = {k:1 for k in agent.state['inventory'].keys()}
@@ -114,6 +91,8 @@ class MacroEconLayout(BaseEnvironment):
       self.energy = 100.
 
   def scenario_step(self):
+      for agent in self.world.agents:
+          agent.resource_points += self.resourcePt_contrib["Agriculture"] + self.resourcePt_contrib["Energy"]
       self.total_CO2 = sum([agent.state['endogenous']['CO2'] for agent in self.world.agents])
       self.agric += 1.
       self.energy += 1.
