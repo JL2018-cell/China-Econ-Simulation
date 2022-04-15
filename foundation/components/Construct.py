@@ -1,7 +1,3 @@
-
-#problem: industry_choice = np.random.choice(industries, size = 1, p = industry_preference)
-#Where does industries, industry_preference come from?
-
 from foundation.base.base_component import (
     BaseComponent,
     component_registry,
