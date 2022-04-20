@@ -67,6 +67,7 @@ def sample_random_action(agent, mask):
 
     # Return a list of actions: 1 for each action subspace
     if agent.multi_action_mode:
+        #localGov takes 1 ~ 3 actions in a timestep.
         actions_num = random.randint(1, 3)
         actions = {}
         #Sample random actions
