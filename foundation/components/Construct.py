@@ -1,3 +1,7 @@
+
+#problem: industry_choice = np.random.choice(industries, size = 1, p = industry_preference)
+#Where does industries, industry_preference come from?
+
 from foundation.base.base_component import (
     BaseComponent,
     component_registry,
@@ -27,8 +31,30 @@ class Construct(BaseComponent):
 
         # Apply any building actions taken by the mobile agents
         for agent in world.get_random_order_agents():
+            for action, magnitude in agent.action.items():
+                if "Construct" in action:
+                    if "break_" in action:
+                        target_industry = action.split("_")[-1]
+                        # target_industry is Agriculture or Energy Industry.
+                        if target_industry in self.required_entities[0:2]:
+                            agent.state['inventory'][target_industry] -= magnitude
+                            agent.buildUpLimit[target_industry] += magnitude
+                        else:
+                            agent.state['inventory'][target_industry] -= magnitude
+                            agent.resource_points += magnitude
+                    elif "build_" in action:
+                        target_industry = action.split("_")[-1]
+                        # target_industry is Agriculture or Energy Industry.
+                        if target_industry in self.required_entities[0:2]:
+                            agent.state['inventory'][target_industry] += magnitude
+                            agent.buildUpLimit[target_industry] -= magnitude
+                        else:
+                            agent.state['inventory'][target_industry] += magnitude
+                            agent.resource_points -= magnitude
+            # In the next timestep, agent gets resources to build Agriculture and Energy industry.
+            for industry in agent.buildUpLimit.keys():
+                agent.buildUpLimit[industry] += agent.buildUpIncrm[industry]
 
-            action = agent.get_component_action(self.name)
             #Each agent has a prefernce list to construct or vreak industry.
             """
             action list:
@@ -39,88 +65,6 @@ class Construct(BaseComponent):
              'Construct.build_Minerals', 'Construct.break_Minerals', 
              'Construct.build_Tourism', 'Construct.break_Tourism']
             """
-            for agent in self.world.agents:
-                if action[0] > 0:
-                    if random.random() < agent.preference['Agriculture']: #Construct Agriulture industry.
-                        self.world.agents[0].inventory['Agriculture'] += 1
-                if action[1] > 0: #Destroy Agriculture industry
-                    if random.random() > agent.preference['Agriculture']: #Construct Agriulture industry.
-                        self.world.agents[0].inventory['Agriculture'] -= 1
-                if action[2] > 0:
-                    if random.random() < agent.preference['Energy']: #Construct Agriulture industry.
-                        self.world.agents[0].inventory['Energy'] += 1
-                if action[3] > 0:
-                    if random.random() > agent.preference['Energy']: #Construct Agriulture industry.
-                        self.world.agents[0].inventory['Energy'] -= 1
-                if action[4] > 0:
-                    if random.random() < agent.preference['Finance']: #Construct Agriulture industry.
-                        self.world.agents[0].inventory['Finance'] += 1
-                if action[5] > 0:
-                    if random.random() > agent.preference['Finance']: #Construct Agriulture industry.
-                        self.world.agents[0].inventory['Finance'] -= 1
-                if action[6] > 0:
-                    if random.random() < agent.preference['IT']: #Construct Agriulture industry.
-                        self.world.agents[0].inventory['IT'] += 1
-                if action[7] > 0:
-                    if random.random() > agent.preference['IT']: #Construct Agriulture industry.
-                        self.world.agents[0].inventory['IT'] -= 1
-                if action[8] > 0:
-                    if random.random() < agent.preference['Minerals']: #Construct Agriulture industry.
-                        self.world.agents[0].inventory['Minerals'] += 1
-                if action[9] > 0:
-                    if random.random() > agent.preference['Minerals']: #Construct Agriulture industry.
-                        self.world.agents[0].inventory['Minerals'] -= 1
-                if action[10] > 0:
-                    if random.random() < agent.preference['Tourism']: #Construct Agriulture industry.
-                        self.world.agents[0].inventory['Tourism'] += 1
-                if action[11] > 0:
-                    if random.random() > agent.preference['Tourism']: #Construct Agriulture industry.
-                        self.world.agents[0].inventory['Tourism'] -= 1
-            #self.world.agents[0].preference
-
-            """
-            # This component doesn't apply to this agent!
-            if action is None:
-                continue
-
-            # NO-OP!
-            if action == 0:
-                pass
-
-            # Build! (If you can.)
-            elif action == 1:
-                if self.agent_can_build(agent):
-                    # Remove the resources that the local government has.
-                    for resource, cost in self.resource_cost.items():
-                        agent.state["inventory"][resource] -= cost
-
-                    # Create an industry in the location of local government. 
-                    loc_r, loc_c = agent.loc
-                    industry_choice = np.random.choice(industries, size = 1, p = industry_preference)
-                    world.create_landmark(industry_choice, loc_r, loc_c, agent.idx)
-
-                    # Receive feedback from the industry i.e. GDP growth, carbon dioxide emission
-                    agent.state["performance"]["GDP"] += 100
-                    agent.state["performance"]["CO2"] += 100
-
-                    # Incur the labor cost for building
-                    agent.state["endogenous"]["Labor"] += self.build_labor
-
-                    build.append(
-                        {
-                            "builder": agent.idx,
-                            "loc": np.array(agent.loc),
-                            "income": float(agent.state["build_payment"]),
-                        }
-                    )
-
-            else:
-                raise ValueError
-            """
-
-        #self.builds.append(build)
-
-        return []
 
     def generate_masks(self, completions = 0):
         #Refer to ai_ChinaEcon\foundation\components\continuous_double_auction.py:580
