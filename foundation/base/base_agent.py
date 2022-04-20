@@ -405,7 +405,6 @@ class BaseAgent:
                     component, np.floor(np.random.rand(*d_array.shape) * d_array)
                 )
 
-    """
     def parse_actions(self, actions):
         #Parse the actions array to fill each component's action buffers.
         if self.multi_action_mode:
@@ -413,7 +412,8 @@ class BaseAgent:
             if len(actions) == 1:
                 self.set_component_action(self._action_names[0], actions[0])
             else:
-                for action_name, action in zip(self._action_names, actions):
+                #for action_name, action in zip(self._action_names, actions):
+                for action_name, action in actions.items():
                     self.set_component_action(action_name, int(action))
 
         # Single action mode
@@ -438,7 +438,6 @@ class BaseAgent:
                     return
                 action_name, action = self.single_action_map.get(action)
                 self.set_component_action(action_name, action)
-    """
 
     def flatten_masks(self, mask_dict):
         """Convert a dictionary of component action masks into a single mask vector."""
