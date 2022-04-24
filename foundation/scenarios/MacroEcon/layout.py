@@ -40,8 +40,8 @@ class MacroEconLayout(BaseEnvironment):
     self.toCarbonEffcy = 0.5
     self.toGDPEffcy = 0.5
     self.resourcePt_contrib = {"Agriculture": 10, "Energy": 10}
-    self.GDP_contrib = {"Agriculture": 100, "Agriculture": 50}
-    self.CO2_contrib = {"Agriculture": 110, "Agriculture": 100} 
+    self.GDP_contrib = {"Agriculture": 100, "Energy": 50}
+    self.CO2_contrib = {"Agriculture": 110, "Energy": 100} 
     self.agric = starting_agent_resources["Food"]
     self.energy = starting_agent_resources["Energy"]
     self.resource_points = 100.
@@ -73,7 +73,7 @@ class MacroEconLayout(BaseEnvironment):
       #Observe agents
       for agent in self.world.agents:
           obs[str(agent.idx)] = {}
-          obs[str(agent.idx)]['actions'] = [act for act, b in self.world.agents[0]._multi_action_dict.items() if b]
+          obs[str(agent.idx)]['actions'] = [act for act, b in agent.action.items() if b > 0]
           obs[str(agent.idx)]['industries'] = agent.state['inventory']
           obs[str(agent.idx)]['endogenous'] = agent.state['endogenous']
       #Observe planner
@@ -93,6 +93,12 @@ class MacroEconLayout(BaseEnvironment):
   def scenario_step(self):
       for agent in self.world.agents:
           agent.resource_points += self.resourcePt_contrib["Agriculture"] + self.resourcePt_contrib["Energy"]
+          for k, v in agent.action.items():
+              if v > 0:
+                  try:
+                      agent.state['endogenous']['CO2'] += self.CO2_contrib[k]
+                  except KeyError:
+                      pass
       self.total_CO2 = sum([agent.state['endogenous']['CO2'] for agent in self.world.agents])
       self.agric += 1.
       self.energy += 1.
