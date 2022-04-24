@@ -84,8 +84,18 @@ class BaseAgent:
         assert not self._registered_inventory
         for entity_name in resources:
             self.inventory[entity_name] = 0
-            self.escrow[entity_name] = 0
+            #self.escrow[entity_name] = 0
+        #self.escrow['resource_points'] = 0
+        #for k, v in self.buildUpLimit.items():
+        #    self.escrow[k] = 0
         self._registered_inventory = True
+
+    def register_escrow(self):
+        if self.name == 'localGov':
+            #self.escrow['Coin'] = 0
+            self.escrow['resource_points'] = 0
+            for k, v in self.buildUpLimit.items():
+                self.escrow[k] = 0
 
     def register_endogenous(self, endogenous):
         """Used during environment construction to populate endogenous state fields."""
@@ -277,7 +287,7 @@ class BaseAgent:
         """
         return self.state["escrow"]
 
-    def inventory_to_escrow(self, resource, amount):
+    def inventory_to_escrow(self, amount):
         """Move some amount of a resource from agent inventory to agent escrow.
 
         Amount transferred is capped to the amount of resource in agent inventory.
@@ -294,9 +304,26 @@ class BaseAgent:
                     transferred = np.minimum(self.state["inventory"][resource], amount)
         """
         assert amount >= 0
-        transferred = float(np.minimum(self.state["inventory"][resource], amount))
-        self.state["inventory"][resource] -= transferred
-        self.state["escrow"][resource] += transferred
+        resources = {'resource_points': self.resource_points}
+        resources = {**self.buildUpLimit, **resources}
+        resources_names = sorted(resources, key = lambda y: resources[y])
+
+        transferred = 0
+        for name in resources_names:
+            if name == 'resource_points':
+                transferred += float(np.minimum(self.resource_points, amount))
+                amount -= np.minimum(self.resource_points, amount)
+                self.resource_points -= transferred
+            else:
+                transferred += float(np.minimum(self.buildUpLimit[name], amount))
+                amount -= np.minimum(self.buildUpLimit[name], amount)
+                self.buildUpLimit[name] -= transferred
+            self.state["escrow"][name] += transferred
+            if amount <= 0:
+                break
+        #transferred += float(np.minimum(self.state["inventory"][resource], amount))
+        #self.state["inventory"][resource] -= transferred
+        #self.state["escrow"][resource] += transferred
         return float(transferred)
 
     def escrow_to_inventory(self, resource, amount):
