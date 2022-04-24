@@ -11,7 +11,7 @@ from foundation.base.base_component import (
     component_registry,
 )
 from foundation.entities import resource_registry
-
+import copy
 
 @component_registry.add
 class ContinuousDoubleAuction(BaseComponent):
@@ -190,7 +190,7 @@ class ContinuousDoubleAuction(BaseComponent):
 
         # Set aside whatever money the agent is willing to pay
         # (will get excess back if price ends up being less)
-        _ = agent.inventory_to_escrow(random.choice(self.resources), int(max_payment))
+        _ = agent.inventory_to_escrow(int(max_payment))
 
         # Incur the labor cost of creating an order
         agent.state["endogenous"]["Labor"] += self.order_labor
@@ -220,7 +220,7 @@ class ContinuousDoubleAuction(BaseComponent):
         self.n_orders[resource][agent.idx] += 1
 
         # Set aside the resource the agent is willing to sell
-        amount = agent.inventory_to_escrow(resource, 1)
+        amount = agent.inventory_to_escrow(1)
         assert amount == 1
 
         # Incur the labor cost of creating an order
@@ -324,21 +324,25 @@ class ContinuousDoubleAuction(BaseComponent):
 
                         # The resource goes from the seller's escrow
                         # to the buyer's inventory
-                        seller.state["escrow"][resource] -= 1
+                        seller.state["inventory"][resource] -= 1
                         buyer.state["inventory"][resource] += 1
 
                         # Buyer's money (already set aside) leaves escrow
                         pre_payment = int(trade["bid"])
-                        buyer.state["escrow"]["Coin"] -= pre_payment
-                        assert buyer.state["escrow"]["Coin"] >= 0
+                        # buyer.state["escrow"]["Coin"] -= pre_payment
+                        # Deduct the item with most points.
+                        buyer.state["escrow"] = self.after_pre_payment(buyer.state["escrow"], pre_payment)
+                        assert all([v > 0 for k, v in buyer.state["escrow"].items()]) >= 0
 
                         # Payment is removed from the pre_payment
                         # and given to the seller. Excess returned to buyer.
                         payment_to_seller = int(trade["price"])
                         excess_payment_from_buyer = pre_payment - payment_to_seller
                         assert excess_payment_from_buyer >= 0
-                        seller.state["inventory"]["Coin"] += payment_to_seller
-                        buyer.state["inventory"]["Coin"] += excess_payment_from_buyer
+                        # seller.state["inventory"]["Coin"] += payment_to_seller
+                        # buyer.state["inventory"]["Coin"] += excess_payment_from_buyer
+                        seller.buildUpLimit, seller.resource_points = self.after_payment_to_seller(seller.buildUpLimit, seller.resource_points, payment_to_seller)
+                        buyer.buildUpLimit, buyer.resource_points = self.after_excess_payment_from_buyer(buyer.buildUpLimit, buyer.resource_points, excess_payment_from_buyer)
 
                         # Restart the inner loop
                         break
@@ -346,6 +350,35 @@ class ContinuousDoubleAuction(BaseComponent):
             # Keep the unfilled bids/asks
             self.bids[resource] = bids
             self.asks[resource] = asks
+
+    def after_payment_to_seller(self, buildUpLimit, resource_points, payment_to_seller):
+        resources = {**buildUpLimit, **{'resource_points': resource_points}}
+        resources_list = sorted(resources.items(), key = lambda x: x[-1], reverse = False)
+        name = resources_list[0][0]
+        resources[name] += payment_to_seller
+        resource_points = resources['resource_points']
+        resources.pop('resource_points')
+        buildUpLimit = copy.copy(resources)
+        return (buildUpLimit, resource_points)
+
+    def after_excess_payment_from_buyer(self, buildUpLimit, resource_points, excess_payment_from_buyer):
+        resources = {**buildUpLimit, **{'resource_points': resource_points}}
+        resources_list = sorted(resources.items(), key = lambda x: x[-1], reverse = False)
+        name = resources_list[0][0]
+        resources[name] += excess_payment_from_buyer
+        resource_points = resources['resource_points']
+        resources.pop('resource_points')
+        buildUpLimit = copy.copy(resources)
+        return (buildUpLimit, resource_points)
+
+    def after_pre_payment(self, escrow, pre_payment):
+        escrow_list = sorted(escrow.items(), key = lambda x: x[-1], reverse = True)
+        for asset, points in escrow_list:
+            escrow[asset] -= min(escrow[asset], pre_payment)
+            pre_payment -= pre_payment
+            if pre_payment <= 0:
+                break
+        return escrow
 
     def remove_expired_orders(self):
         """
