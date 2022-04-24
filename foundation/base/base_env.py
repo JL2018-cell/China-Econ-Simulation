@@ -353,6 +353,7 @@ class BaseEnvironment(ABC):
         # to finish setting up their state/action spaces.
         for agent in self.world.agents:
             agent.register_inventory(self.resources)
+            agent.register_escrow()
             agent.register_endogenous(self.endogenous)
             agent.register_components(self._components)
         self.world.planner.register_inventory(self.resources)
