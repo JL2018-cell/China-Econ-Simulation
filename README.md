@@ -1,8 +1,7 @@
 # China-Econ-Simulation
 
 <h1> Current Status </h1>
-<li> Can run normally without bugs. </li>
-<li> Needs more variables to track status of agents. </li>
+<li> Improving logic of ContinuousDoubleAuction to fit ChinaEcon simulation context. </li>
 
 <p> Files editing: </p>
 <li> China-Econ-Simulation/econSimul.py </li>
@@ -19,44 +18,27 @@
 <p> See component_step() in ai_ChinaEcon\foundation\components\Construct.py </p>
 
 # Current task
-<li> Let agents (localGov) act intelligently, instead of randomly. </li>
-<li> Impose limit of Energy, Agriculture industry growth rate on local Gov. </li>
 <p> Impose upper bound of building agriculture, energy industry per time step. Defined in env_config. </p>
 <li> How to insert final data and intermediate data into model? </li>
 <li> Building industries involves no cost so far. agent.state["performance"]["GDP"], agent.state["endogenous"]["Labor"], agent.state["performance"]["CO2"], effects to map are skipped temporarily. See component_step() in ai_ChinaEcon\foundation\components\Construct.py</li>
-<li> Add resource points. Produced from Energy & agriculture industry,used to build other industries. </li>
-<p> self.resource_points = 0 </p>
-<li> self.resourcePt_contrib = {"Agriculture": 10, "Energy": 10} can read from env_config </li>
 <li> Where is "Labor" in endogenous variable be computed? </li>
 <p> foundation\components\continuous_double_auction.py:196:        agent.state[endogenous][Labor] += self.order_labor
 foundation\components\continuous_double_auction.py:227:        agent.state[endogenous][Labor] += self.order_labor
 The computation not agree with MacroEcon setting. Should change it. </p>
 <li> Remove excessive items in obs of "obs, rew, done, info = env.step(actions)". </li>
 <li> Planner: Observe planner (generated every time step) actions taken, industry points stored. </li>
-<li> CO2 should be aggregated and observed by all agents. </li>
-<p> ai_ChinaEcon\foundation\scenarios\MacroEcon\layout.py </p>
-<li> Update states of agents </li>
-<p> for component in self._components: in ai_ChinaEcon_v3\foundation\base\base_env.py </p>
 <li> replace def sample_random_actions(env, obs): in main program with intelligent actions. </li>
 <li> Pay attention to timescale of model </li>
 <p> ai_ChinaEcon\foundation\base\base_env.py: 653 </p>
-<li> Setting of payment: choose resource (industry) to pay randomly. This is not good. </li>
-<p> ai_ChinaEcon\foundation\components\continuous_double_auction.py: 193 </>
 <li> Generate action mask for building industries over resource points. </li>
 <li> RL: Given state -> nextstate, compute action required using e.g. Q-learning. </li>
 <li> Curriculum learning </li>
 <p> BuildUpLimit ~ reward. > BuildUpLimit -> punishment. Otherwise, reward. This has small magnitude at beginning but larger later. </p>
-<li> Know action dimension & action magnitude in def generate_n_actions() of each component. </li>
-<p> <ul>
-       <li> agent.reset_actions() in ai_ChinaEcon\foundation\base\base_env.py line 1034 of 1166 </li>
-       <li> agent.parse_actions() in mobiles.py </li>
-    </ul>
-</p>
 <li> Change in payment method in Continuous Double Auction. </li>
 <p> ai_ChinaEcon\foundation\components\continuous_double_auction.py, line 332, in match_orders </p>
 <p> buyer.state[escrow][Coin] -= pre_payment </p>
 <p> KeyError: 'Coin' </p>
-
+<li> Plot result of simulation. </li>
 
 # Done task
 <li> How to declare localGov and centralGov? </li>
@@ -127,6 +109,30 @@ ai_ChinaEcon\foundation\scenarios\MacroEcon\layout.py: generate_observations(sel
 <li> location, name of localGov </li>
 <p> ai_ChinaEcon\foundation\base\world.py </p>
 
+<li> Setting of payment: choose resource (industry) to pay randomly. This is not good. </li>
+<p> ai_ChinaEcon\foundation\components\continuous_double_auction.py: 193 </>
+
+<li> Impose limit of Energy, Agriculture industry growth rate on local Gov. </li>
+
+<li> Add resource points. Produced from Energy & agriculture industry,used to build other industries. </li>
+
+<li> self.resourcePt_contrib = {"Agriculture": 10, "Energy": 10} can read from env_config </li>
+
+<li> resource_points e.g. food, electricity used to build other industries, except agriculture & Energy industry. </li>
+<p> self.resource_points = 0 </p>
+
+<li> Update states of agents </li>
+<p> for component in self._components: in ai_ChinaEcon_v3\foundation\base\base_env.py </p>
+
+<li> Know action dimension & action magnitude in def generate_n_actions() of each component. </li>
+<p> <ul>
+       <li> agent.reset_actions() in ai_ChinaEcon\foundation\base\base_env.py line 1034 of 1166 </li>
+       <li> agent.parse_actions() in mobiles.py </li>
+    </ul>
+</p>
+
+<li> CO2 should be aggregated and observed by all agents. </li>
+<p> ai_ChinaEcon\foundation\scenarios\MacroEcon\layout.py </p>
 
 
 # Further improvement
@@ -147,6 +153,7 @@ industries in env_config (a dictionary) in tt.py
 required_entities in ai_ChinaEcon\foundation\components\continuous_double_auction.py
 classes in ai_ChinaEcon\foundation\entities\resources.py
 required_entities in ai_ChinaEcon\foundation\components\Construct.py
+
 
 
 
