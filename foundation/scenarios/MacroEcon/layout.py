@@ -1,20 +1,8 @@
 import numpy as np
-from scipy import signal
 
 from foundation.base.base_env import BaseEnvironment, scenario_registry
 from foundation.scenarios.utils import rewards, social_metrics
-from foundation.base.base_env import BaseEnvironment, scenario_registry
 
-@scenario_registry.add
-class agriculture_industry(BaseEnvironment):
-  def __init__(self):
-    self.resource = 0
-
-@scenario_registry.add
-class energy_industry(BaseEnvironment):
-  def __init__(self):
-    self.resource = 0
-    
 @scenario_registry.add
 class MacroEconLayout(BaseEnvironment):
   """
