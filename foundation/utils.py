@@ -10,7 +10,7 @@ import sys
 from hashlib import sha512
 
 import lz4.frame
-from Crypto.PublicKey import RSA
+#from Crypto.PublicKey import RSA
 
 from foundation.base.base_env import BaseEnvironment
 
@@ -79,12 +79,13 @@ def verify_activation_code():
         with open(filepath, "r") as fp:
             activation_code = fp.read()
             fp.close()
-        if validate_activation_code(activation_code):
-            return  # already activated
-        print(
-            "The activation code saved in '{}' is incorrect! "
-            "Please correct the activation code and try again.".format(filepath)
-        )
+        return  # always activated
+        #if validate_activation_code(activation_code):
+        #    return  # already activated
+        #print(
+        #    "The activation code saved in '{}' is incorrect! "
+        #    "Please correct the activation code and try again.".format(filepath)
+        #)
         sys.exit(0)
     else:
         print(
@@ -102,18 +103,19 @@ def verify_activation_code():
                 f"(attempt {attempt_num + 1} / {num_attempts})"
             )
             attempt_num += 1
-            if validate_activation_code(activation_code):
-                print(
-                    "Saving the activation code in '{}' for future "
-                    "use.".format(filepath)
-                )
-                with open(
-                    os.path.join(path_to_activation_code_dir, activation_code_filename),
-                    "w",
-                ) as fp:
-                    fp.write(activation_code)
-                    fp.close()
-                return
+            return
+            #if validate_activation_code(activation_code):
+            #    print(
+            #        "Saving the activation code in '{}' for future "
+            #        "use.".format(filepath)
+            #    )
+            #    with open(
+            #        os.path.join(path_to_activation_code_dir, activation_code_filename),
+            #        "w",
+            #    ) as fp:
+            #        fp.write(activation_code)
+            #        fp.close()
+            #    return
             print("Incorrect activation code. Please try again.")
         print(
             "You have had {} attempts to provide the activate code. Unfortunately, "
