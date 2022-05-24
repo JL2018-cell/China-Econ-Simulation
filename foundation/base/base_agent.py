@@ -306,7 +306,7 @@ class BaseAgent:
         assert amount >= 0
         resources = {'resource_points': self.resource_points}
         resources = {**self.buildUpLimit, **resources}
-        resources_names = sorted(resources, key = lambda y: resources[y])
+        resources_names = sorted(resources, key = lambda y: resources[y], reverse = True)
 
         transferred = 0
         for name in resources_names:
@@ -440,7 +440,7 @@ class BaseAgent:
                 self.set_component_action(self._action_names[0], actions[0])
             else:
                 #for action_name, action in zip(self._action_names, actions):
-                for action_name, action in actions.items():
+                for action_name, action in zip(self._action_names, actions):
                     self.set_component_action(action_name, int(action))
 
         # Single action mode
