@@ -7,7 +7,7 @@ from foundation.base.base_agent import BaseAgent, agent_registry
 from foundation.scenarios.MacroEcon.layout import MacroEconLayout
 from foundation.components import component_registry
 from foundation.components.Construct import Construct
-from foundation.components.Transport import Transport
+from foundation.components.continuous_double_auction import ContinuousDoubleAuction
 from utils.env_wrapper import RLlibEnvWrapper
 import foundation
 import numpy as np
@@ -20,8 +20,6 @@ env_config = {
     'components': [
         #Build industries
         {"Construct": {}},
-        #Import resources from other provinces
-        {"Transport": {}},
         #Exchange resources, industry points by auction.
         {'ContinuousDoubleAuction': {'max_num_orders': 5}},
     ],
@@ -29,10 +27,11 @@ env_config = {
     # ===== SCENARIO CLASS ARGUMENTS =====
     'agent_names': ["GuangDong", "HeBei", "XinJiang"],
     'agent_locs': [(80, 10), (50, 50), (10, 60)],
+    # Resource points that each agents van get in each time step.
     'buildUpLimit': {'Agriculture': 10, 'Energy': 10},
-    # Industries available in this world.
-    'industries': ['Agriculture', 'Energy', 'Finance', \
-                   'IT', 'Minerals', 'Tourism'], #Help to define actions of localGov
+    # Industries available in this world. Their upper limit.
+    'industries': {'Agriculture': 2000, 'Energy': 2000, 'Finance': 2000, \
+                   'IT': 2000, 'Minerals': 2000, 'Tourism': 2000}, #Help to define actions of localGov
     # (optional) kwargs of the chosen scenario class
     'starting_agent_resources': {"Food": 10., "Energy": 10.}, #food, energy
 
@@ -46,7 +45,7 @@ env_config = {
     'allow_observation_scaling': False,
     # Upper limit of industries that localGov can build per timestep.
     'flatten_observations': False,
-    'flatten_masks': False,
+    'flatten_masks': True,
     'dense_log_frequency': 1,
 }
 
