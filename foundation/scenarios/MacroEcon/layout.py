@@ -1,5 +1,5 @@
 import numpy as np
-
+import copy
 from foundation.base.base_env import BaseEnvironment, scenario_registry
 from foundation.scenarios.utils import rewards, social_metrics
 
@@ -19,24 +19,31 @@ class MacroEconLayout(BaseEnvironment):
   required_entities = required_industries
 
   def __init__(self, starting_agent_resources, industries, **kwargs):
-    #Total CO2 emission of all localGov.
-    self.total_CO2 = 0.
-    self.world_size = [100, 100]
-    self.energy_cost = 100
-    self.expn_per_day = 100
-    self.pt_per_day = 100
-    self.toCarbonEffcy = 0.5
-    self.toGDPEffcy = 0.5
-    self.resourcePt_contrib = {"Agriculture": 10, "Energy": 10}
-    self.GDP_contrib = {"Agriculture": 100, "Energy": 50}
-    self.CO2_contrib = {"Agriculture": 110, "Energy": 100} 
-    self.agric = starting_agent_resources["Food"]
-    self.energy = starting_agent_resources["Energy"]
-    self.resource_points = 100.
-    self.industries = industries
-    #assert self.starting_agent_coin >= 0.0
-    super().__init__(**kwargs)
-
+      #Total CO2 emission of all localGov.
+      self.total_CO2 = 0.
+      self.world_size = [100, 100]
+      self.energy_cost = 100
+      self.expn_per_day = 100
+      self.pt_per_day = 100
+      self.toCarbonEffcy = 0.5
+      self.toGDPEffcy = 0.5
+      self.resourcePt_contrib = {"Agriculture": 10, "Energy": 10}
+      self.GDP_contrib = {"Agriculture": 100, "Energy": 50}
+      self.CO2_contrib = {"Agriculture": 110, "Energy": 100} 
+      self.agric = starting_agent_resources["Food"]
+      self.energy = starting_agent_resources["Energy"]
+      self.resource_points = 100.
+      #assert self.starting_agent_coin >= 0.0
+      super().__init__(**kwargs)
+      for industry, upperLimits in industries.items():
+          if isinstance(upperLimits, list): #Each region has its own upper limit of building industries.
+              for i, agent in enumerate(self.world.agents):
+                  agent.preference.update({industry: upperLimits[i]})
+          elif isinstance(upperLimits, (int, float)): #All regions have same upper limit of building industries.
+              for agent in self.world.agents:
+                  agent.preference.update({industry: upperLimits})
+          else:
+              raise ValueError("Upper limit of building industries shoud have type List or int.")
 
   def compute_reward(self):
       #weights = {k:1 for k in agent.state['inventory'].keys()}
@@ -49,9 +56,10 @@ class MacroEconLayout(BaseEnvironment):
       #Assume all weights = 1
       rewards = {}
       for agent in self.world.agents:
-        #rewards[agent.idx] = sum(agent.state['inventory'].values()) + sum(agent.state['endogenous'].values())
-        weights = np.array([1 for i in list(agent.state['inventory'].keys()) + list(agent.state['endogenous'].keys())])
-        rewards[agent.idx] = np.dot(np.array(list(agent.state['inventory'].values()) + list(agent.state['endogenous'].values())), weights)
+          #rewards[agent.idx] = sum(agent.state['inventory'].values()) + sum(agent.state['endogenous'].values())
+          weights = np.array([1 for i in list(agent.state['inventory'].keys()) + list(agent.state['endogenous'].keys())])
+          rewards[agent.idx] = np.dot(np.array(list(agent.state['inventory'].values()) + list(agent.state['endogenous'].values())), weights)
+      rewards[self.world.planner.idx] = self.total_GDP - self.total_CO2
       print("In layout, rewards:", rewards)
       return rewards
 
@@ -61,7 +69,8 @@ class MacroEconLayout(BaseEnvironment):
       #Observe agents
       for agent in self.world.agents:
           obs[str(agent.idx)] = {}
-          obs[str(agent.idx)]['actions'] = [act for act, b in agent.action.items() if b > 0]
+          # obs[str(agent.idx)]['actions'] = [(act, b) for act, b in agent.action.items() if b > 0]
+          obs[str(agent.idx)]['actions'] = copy.copy(agent.action)
           obs[str(agent.idx)]['industries'] = agent.state['inventory']
           obs[str(agent.idx)]['endogenous'] = agent.state['endogenous']
       #Observe planner
@@ -88,6 +97,7 @@ class MacroEconLayout(BaseEnvironment):
                   except KeyError:
                       pass
       self.total_CO2 = sum([agent.state['endogenous']['CO2'] for agent in self.world.agents])
+      self.total_GDP = sum([agent.state['endogenous']['GDP'] for agent in self.world.agents])
       self.agric += 1.
       self.energy += 1.
 
