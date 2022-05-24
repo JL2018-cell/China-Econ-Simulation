@@ -28,25 +28,36 @@ class Construct(BaseComponent):
         # Apply any building actions taken by the mobile agents
         for agent in world.get_random_order_agents():
             for action, magnitude in agent.action.items():
+                print("Agent", agent.idx, ":", action, "-", magnitude)
                 if "Construct" in action:
                     if "break_" in action:
                         target_industry = action.split("_")[-1]
-                        # target_industry is Agriculture or Energy Industry.
-                        if target_industry in self.required_entities[0:2]:
-                            agent.state['inventory'][target_industry] -= magnitude
-                            agent.buildUpLimit[target_industry] += magnitude
+                        # After breaking industry, resultant resource point allocated on it should not < 0.
+                        if agent.state['inventory'][target_industry] - magnitude > 0:
+                            # target_industry is Agriculture or Energy Industry.
+                            if target_industry in self.required_entities[0:2]:
+                                    agent.state['inventory'][target_industry] -= magnitude
+                                    agent.buildUpLimit[target_industry] += magnitude
+                            else:
+                                    agent.state['inventory'][target_industry] -= magnitude
+                                    agent.resource_points += magnitude
                         else:
-                            agent.state['inventory'][target_industry] -= magnitude
-                            agent.resource_points += magnitude
+                            #Incorporate punishment of agent acts outside limit.
+                            pass
                     elif "build_" in action:
                         target_industry = action.split("_")[-1]
-                        # target_industry is Agriculture or Energy Industry.
-                        if target_industry in self.required_entities[0:2]:
-                            agent.state['inventory'][target_industry] += magnitude
-                            agent.buildUpLimit[target_industry] -= magnitude
+                        # After building industry, resultant resource point allocated on it should not > preference i.e. upper limit.
+                        if agent.state['inventory'][target_industry] + magnitude <= agent.preference[target_industry]:
+                            # target_industry is Agriculture or Energy Industry.
+                            if target_industry in self.required_entities[0:2]:
+                                    agent.state['inventory'][target_industry] += magnitude
+                                    agent.buildUpLimit[target_industry] -= magnitude
+                            else:
+                                    agent.state['inventory'][target_industry] += magnitude
+                                    agent.resource_points -= magnitude
                         else:
-                            agent.state['inventory'][target_industry] += magnitude
-                            agent.resource_points -= magnitude
+                            #Incorporate punishment of agent acts outside limit.
+                            pass
             # In the next timestep, agent gets resources to build Agriculture and Energy industry.
             for industry in agent.buildUpLimit.keys():
                 agent.buildUpLimit[industry] += agent.buildUpIncrm[industry]
