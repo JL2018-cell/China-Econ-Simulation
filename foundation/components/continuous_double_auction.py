@@ -193,7 +193,7 @@ class ContinuousDoubleAuction(BaseComponent):
         _ = agent.inventory_to_escrow(int(max_payment))
 
         # Incur the labor cost of creating an order
-        agent.state["endogenous"]["Labor"] += self.order_labor
+        # agent.state["endogenous"]["Labor"] += self.order_labor
 
     def create_ask(self, resource, agent, min_income):
         """
@@ -221,10 +221,10 @@ class ContinuousDoubleAuction(BaseComponent):
 
         # Set aside the resource the agent is willing to sell
         amount = agent.inventory_to_escrow(1)
-        assert amount == 1
+        # assert amount == 1
 
         # Incur the labor cost of creating an order
-        agent.state["endogenous"]["Labor"] += self.order_labor
+        # agent.state["endogenous"]["Labor"] += self.order_labor
 
     def match_orders(self):
         """
@@ -497,6 +497,7 @@ class ContinuousDoubleAuction(BaseComponent):
                 resource_action = agent.get_component_action(
                     self.name, "Buy_{}".format(resource)
                 )
+                print("Agent", agent.idx, "auction bid:", resource_action)
 
                 # No-op
                 if resource_action == 0:
@@ -514,6 +515,7 @@ class ContinuousDoubleAuction(BaseComponent):
                 resource_action = agent.get_component_action(
                     self.name, "Sell_{}".format(resource)
                 )
+                print("Agent", agent.idx, "auction ask:", resource_action)
 
                 # No-op
                 if resource_action == 0:
