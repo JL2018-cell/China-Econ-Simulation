@@ -120,6 +120,8 @@ class RLlibEnvWrapper(MultiAgentEnv):
                 _v = np.array(v)
             elif isinstance(v, (int, float, np.floating, np.integer)):
                 _v = np.array([v])
+            elif isinstance(v, tuple):
+                _v = np.array(v)
 
             # assign Space
             if isinstance(_v, np.ndarray):
@@ -142,9 +144,6 @@ class RLlibEnvWrapper(MultiAgentEnv):
 
             elif isinstance(_v, dict):
                 dict_of_spaces[k] = self._dict_to_spaces_dict(_v)
-
-            elif isinstance(_v, tuple):
-                pass
 
             else:
                 raise TypeError
@@ -213,3 +212,4 @@ class RLlibEnvWrapper(MultiAgentEnv):
         assert isinstance(obs[self.sample_agent_idx]["action_mask"], np.ndarray)
 
         return recursive_list_to_np_array(obs), rew, done, info
+        # return obs, rew, done, info
