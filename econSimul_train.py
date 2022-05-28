@@ -80,11 +80,13 @@ trainer_config = {
 
 trainer_config.update(
     {
-        "num_workers": 2,
+        "num_workers": 4,
         "num_envs_per_worker": 2,
         # Other training parameters
         "train_batch_size":  4000,
         "sgd_minibatch_size": 4000,
+        "num_gpus": 1,
+        #"num_gpus_per_worker": 1,
         "num_sgd_iter": 1
     }
 )
@@ -117,4 +119,85 @@ trainer = PPOTrainer(
 for i in range(1):
     results = trainer.train()
     print(f"Iter: {i}; avg. reward={results['episode_reward_mean']}")
+
+"""
+# Below, we fetch the dense logs for each rollout worker and environment within
+
+dense_logs = {}
+# Note: worker 0 is reserved for the trainer actor
+for worker in range((trainer_config["num_workers"] > 0), trainer_config["num_workers"] + 1):
+    for env_id in range(trainer_config["num_envs_per_worker"]):                                                                 dense_logs["worker={};env_id={}".format(worker, env_id)] = \
+        trainer.workers.foreach_worker(lambda w: w.async_env)[worker].envs[env_id].env.previous_episode_dense_log
+
+# We should have num_workers x num_envs_per_worker number of dense logs
+print(dense_logs.keys())
+
+import pickle
+with open('dense_logs1.pkl', 'wb') as f:
+    pickle.dump(dense_logs, f)
+print("Save dense_logs1 in dense_logs.pkl")       
+
+### 4b. Generate a dense log from the most recent trainer policy model weights
+
+#We may also use the trainer object directly to play out an episode. The advantage of this approach is that we can re-sample the policy model any number of times and generate several rollouts.
+
+
+def generate_rollout_from_current_trainer_policy(
+    trainer,
+    env_obj,
+    num_dense_logs=1
+):
+    dense_logs = {}
+    for idx in range(num_dense_logs):
+        # Set initial states
+        agent_states = {}
+        for agent_idx in range(env_obj.env.n_agents):
+            agent_states[str(agent_idx)] = trainer.get_policy("a").get_initial_state()
+        planner_states = trainer.get_policy("p").get_initial_state()
+
+        # Play out the episode
+        obs = env_obj.reset(force_dense_logging=True)
+        for t in range(env_obj.env.episode_length):
+            actions = {}
+            for agent_idx in range(env_obj.env.n_agents):
+                # Use the trainer object directly to sample actions for each agent
+                actions[str(agent_idx)] = trainer.compute_action(
+                    obs[str(agent_idx)],
+                    agent_states[str(agent_idx)],
+                    policy_id="a",
+                    full_fetch=False
+                )
+
+            # Action sampling for the planner
+            actions["p"] = trainer.compute_action(
+                obs['p'],
+                planner_states,                                                                                                                    policy_id='p',
+                full_fetch=False
+            )
+
+            obs, rew, done, info = env_obj.step(actions)
+            if done['__all__']:
+                break
+        dense_logs[idx] = env_obj.env.dense_log
+    return dense_logs
+
+dense_logs = generate_rollout_from_current_trainer_policy(
+    trainer,
+    env_obj,
+    num_dense_logs=2
+)
+
+with open('dense_logs2.pkl', 'wb') as f:
+    pickle.dump(dense_logs, f)
+print("Save dense_logs2 in dense_logs.pkl")
+
+
+from utils import plotting  # plotting utilities for visualizing env. state
+
+dense_log_idx = 0
+plotting.breakdown(dense_logs[dense_log_idx]);
+"""
+
+# Shutdown Ray after use
+ray.shutdown()
 
