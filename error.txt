@@ -1,0 +1,43 @@
+Error in econSimul_train.py
+
+(Pdb) cl
+Clear all breaks? y
+Deleted breakpoint 1 at /userhome/cs/jlin2022/anaconda3/lib/python3.8/site-packages/ray/rllib/agents/trainer.py:773
+(Pdb) c
+Traceback (most recent call last):
+  File "/userhome/cs/jlin2022/anaconda3/lib/python3.8/pdb.py", line 1704, in main
+    pdb._runscript(mainpyfile)
+  File "/userhome/cs/jlin2022/anaconda3/lib/python3.8/pdb.py", line 1573, in _runscript
+    self.run(statement)
+  File "/userhome/cs/jlin2022/anaconda3/lib/python3.8/bdb.py", line 580, in run
+    exec(cmd, globals, locals)
+  File "<string>", line 1, in <module>
+  File "/userhome/cs/jlin2022/China-Econ-Simulation-Simple_v7/econSimul_train.py", line 137, in <module>
+    obs, reward, done, info = env.step(action)
+  File "/userhome/cs/jlin2022/China-Econ-Simulation-Simple_v7/foundation/base/base_env.py", line 979, in step
+    assert isinstance(actions, dict)
+AssertionError
+Uncaught exception. Entering post mortem debugging
+Running 'cont' or 'step' will restart the program
+> /userhome/cs/jlin2022/China-Econ-Simulation-Simple_v7/foundation/base/base_env.py(979)step()
+-> assert isinstance(actions, dict)
+(Pdb) p actions
+array([10,  3,  6,  2,  0, 17,  0,  2, 15,  4, 11, 11,  2,  9,  4,  7,  1,
+        9,  7,  8,  5,  4,  2,  4])
+(Pdb) p dict
+<class 'dict'>
+(Pdb) w
+  /userhome/cs/jlin2022/anaconda3/lib/python3.8/pdb.py(1704)main()
+-> pdb._runscript(mainpyfile)
+  /userhome/cs/jlin2022/anaconda3/lib/python3.8/pdb.py(1573)_runscript()
+-> self.run(statement)
+  /userhome/cs/jlin2022/anaconda3/lib/python3.8/bdb.py(580)run()
+-> exec(cmd, globals, locals)
+  <string>(1)<module>()
+  /userhome/cs/jlin2022/China-Econ-Simulation-Simple_v7/econSimul_train.py(137)<module>()
+-> obs, reward, done, info = env.step(action)
+> /userhome/cs/jlin2022/China-Econ-Simulation-Simple_v7/foundation/base/base_env.py(979)step()
+-> assert isinstance(actions, dict)
+(Pdb) p actions.shape
+(24,)
+(Pdb)
