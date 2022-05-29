@@ -1,0 +1,4 @@
+# Understand metrics in tensorboard
+
+vi /userhome/cs/jlin2022/anaconda3/lib/python3.8/site-packages/ray/rllib/optimizers/multi_gpu_optimizer.py
+cd /userhome/cs/jlin2022/anaconda3/lib/python3.8/site-packages/ray/rllib/optimizers/policy_optimizer.py:collect_metric
