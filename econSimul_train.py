@@ -15,7 +15,7 @@ import random
 import matplotlib.pyplot as plt
 
 env_config = {
-    'scenario_name': 'layout/MacroEcon',
+    "scenario_name": 'layout/MacroEcon',
 
     'components': [
         #Build industries
@@ -85,8 +85,8 @@ trainer_config.update(
         # Other training parameters
         "train_batch_size":  4000,
         "sgd_minibatch_size": 4000,
-        "num_gpus": 1,
-        #"num_gpus_per_worker": 1,
+        "num_gpus": 2,
+        "num_gpus_per_worker": 1,
         "num_sgd_iter": 1
     }
 )
@@ -119,6 +119,42 @@ trainer = PPOTrainer(
 for i in range(1):
     results = trainer.train()
     print(f"Iter: {i}; avg. reward={results['episode_reward_mean']}")
+
+
+
+# Computing Actions
+env = foundation.make_env_instance(**env_config['env_config_dict'])
+obs = env.reset()
+print("Start Simulation...")
+done = {"__all__": False}
+actions = {}
+while not done["__all__"]:
+    input("Start new round.")
+    for agent_idx in obs.keys():
+        print("Agent:", agent_idx)
+        agent = env.get_agent(agent_idx)
+        if agent_idx == 'p':
+            agent_action = trainer.compute_action(obs[agent_idx], policy_id = 'p')
+        else:
+            agent_action = trainer.compute_action(obs[agent_idx], policy_id = 'a')
+        actions[agent_idx] = agent_action
+        #actions[agent_idx] = dict(zip(agent._action_names, agent_action))
+        #actions = {k: [v for k, v in v.items()] for k, v in actions.items()}
+    obs, reward, done, info = env.step(actions)
+    print("Reward:", reward)
+    actions.clear()
+
+# Get weights of the default local policy
+# trainer.get_policy().get_weights()
+
+# Same as above
+trainer.workers.local_worker().policy_map["default_policy"].get_weights()
+
+# Get list of weights of each worker, including remote replicas
+# trainer.workers.foreach_worker(lambda ev: ev.get_policy().get_weights())
+
+# Same as above
+# trainer.workers.foreach_worker_with_index(lambda ev, i: ev.get_policy().get_weights())
 
 """
 # Below, we fetch the dense logs for each rollout worker and environment within
