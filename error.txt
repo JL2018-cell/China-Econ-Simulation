@@ -1,5 +1,17 @@
 Error in econSimul_train.py
 
+
+* KeyError: 'default_policy'
+(Pdb) w
+  /userhome/cs/jlin2022/anaconda3/lib/python3.8/bdb.py(580)run()
+-> exec(cmd, globals, locals)
+> <string>(1)<module>()->None
+  /userhome/cs/jlin2022/China-Econ-Simulation-Simple_v7/econSimul_train.py(129)<module>()->None
+-> action = trainer.compute_action(obs)
+  /userhome/cs/jlin2022/anaconda3/lib/python3.8/site-packages/ray/rllib/agents/trainer.py(773)compute_action()
+-> preprocessed = self.workers.local_worker().preprocessors[
+
+* Should label actions. It is an array, not dictionary.
 (Pdb) cl
 Clear all breaks? y
 Deleted breakpoint 1 at /userhome/cs/jlin2022/anaconda3/lib/python3.8/site-packages/ray/rllib/agents/trainer.py:773
