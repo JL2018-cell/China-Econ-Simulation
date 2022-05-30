@@ -109,8 +109,8 @@ class Construct(BaseComponent):
                 #How much resource is generated.
                 #"build_resources": self.sampled_skills[agent.idx],
                 "loc": agent.state["loc"],
-                "Agriculture": agent.state["inventory"]["Agriculture"],
-                "Energy": agent.state["inventory"]["Energy"]
+                "Agriculture": np.array(agent.state["inventory"]["Agriculture"]),
+                "Energy": np.array(agent.state["inventory"]["Energy"])
             }
 
         return obs_dict
