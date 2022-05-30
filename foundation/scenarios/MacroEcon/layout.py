@@ -46,12 +46,6 @@ class MacroEconLayout(BaseEnvironment):
               raise ValueError("Upper limit of building industries shoud have type List or int.")
 
   def compute_reward(self):
-      #weights = {k:1 for k in agent.state['inventory'].keys()}
-      #for endogn in agent.state['endogenous']:
-      #    weights[endogn] = agent.state['endogenous'][endogn]
-      #weights = np.array(list(agent.state['inventory'].keys()) \
-      #                   + list(agent.state['endogenous'].keys()))
-
       #Reward = linear combination of ['Agriculture', 'Energy', 'Finance', 'IT', 'Minerals', 'Tourism', 'CO2', 'GDP', 'Labor']
       #Assume all weights = 1
       rewards = {}
@@ -69,14 +63,13 @@ class MacroEconLayout(BaseEnvironment):
       #Observe agents
       for agent in self.world.agents:
           obs[str(agent.idx)] = {}
-          # obs[str(agent.idx)]['actions'] = [(act, b) for act, b in agent.action.items() if b > 0]
-          obs[str(agent.idx)]['actions'] = copy.copy(agent.action)
-          obs[str(agent.idx)]['industries'] = agent.state['inventory']
-          obs[str(agent.idx)]['endogenous'] = agent.state['endogenous']
+          obs[str(agent.idx)]['actions'] = {k: np.array(v) for k, v in agent.action.items()}
+          obs[str(agent.idx)]['industries'] = {k: np.array(v) for k, v in agent.state['inventory'].items()}
+          obs[str(agent.idx)]['endogenous'] = {k: np.array(v) for k, v in agent.state['endogenous'].items()}
       #Observe planner
       obs[self.world.planner.idx] = {}
-      obs[self.world.planner.idx]['actions'] = self.world.planner.action
-      obs[self.world.planner.idx]['storage'] = self.world.planner.inventory
+      obs[self.world.planner.idx]['actions'] = {k: np.array(v) for k, v in self.world.planner.action.items()}
+      obs[self.world.planner.idx]['storage'] = {k: np.array([v]) for k, v in self.world.planner.inventory.items()}
       return obs
 
   def reset_agent_states(self):
