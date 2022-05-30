@@ -561,7 +561,7 @@ class ContinuousDoubleAuction(BaseComponent):
 
             obs[world.planner.idx].update(
                 {
-                    "market_rate-{}".format(c): market_rate,
+                    "market_rate-{}".format(c): np.array(market_rate),
                     "price_history-{}".format(c): scaled_price_history,
                     "full_asks-{}".format(c): full_asks,
                     "full_bids-{}".format(c): full_bids,
@@ -572,7 +572,7 @@ class ContinuousDoubleAuction(BaseComponent):
                 # Private to the agent
                 obs[agent.idx].update(
                     {
-                        "market_rate-{}".format(c): market_rate,
+                        "market_rate-{}".format(c): np.array([market_rate]),
                         "price_history-{}".format(c): scaled_price_history,
                         "available_asks-{}".format(c): full_asks
                         - self.ask_hists[c][agent.idx],
