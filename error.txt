@@ -45,3 +45,10 @@ array([10,  3,  6,  2,  0, 17,  0,  2, 15,  4, 11, 11,  2,  9,  4,  7,  1,
 
 bookmark:
 ~/anaconda3/lib/python3.8/site-packages/gym/spaces/dict.py
+
+
+* Actions should contain actions of all agents.
+> /userhome/cs/jlin2022/China-Econ-Simulation-Simple_v7/foundation/base/base_env.py(568)parse_actions()
+-> for agent_idx, agent_actions in action_dictionary.items():
+(Pdb) p action_dictionary
+{'Construct.build_Agriculture': 20, 'Construct.break_Agriculture': 10, 'Construct.build_Energy': 3, 'Construct.break_Energy': 12, 'Construct.build_Finance': 5, 'Construct.break_Finance': 1, 'Construct.build_IT': 18, 'Construct.break_IT': 2, 'Construct.build_Minerals': 10, 'Construct.break_Minerals': 2, 'Construct.build_Tourism': 15, 'Construct.break_Tourism': 5, 'ContinuousDoubleAuction.Buy_Agriculture': 10, 'ContinuousDoubleAuction.Sell_Agriculture': 4, 'ContinuousDoubleAuction.Buy_Minerals': 1, 'ContinuousDoubleAuction.Sell_Minerals': 9, 'ContinuousDoubleAuction.Buy_Energy': 1, 'ContinuousDoubleAuction.Sell_Energy': 8, 'ContinuousDoubleAuction.Buy_Tourism': 10, 'ContinuousDoubleAuction.Sell_Tourism': 6, 'ContinuousDoubleAuction.Buy_IT': 1, 'ContinuousDoubleAuction.Sell_IT': 8, 'ContinuousDoubleAuction.Buy_Finance': 3, 'ContinuousDoubleAuction.Sell_Finance': 8}
