@@ -58,4 +58,23 @@
       Configuration
       Experiment runner: ray tune
       Average total reward per episode. </p>
+  <li> Plotting </li>
+      <ul>
+        <li> Industry distribution </li>
+        <li> BuildUpLimit </li>
+        <li> Resource_points </li>
+        <li> CO2 </li>
+        <li> GDP </li>
+        <li> Actions taken </li>
+        <p> Construct, ContinuousDoubleAuction: market rate, price history... </p>
+      </ul>
+      <ul>
+        <li> Parameters </li>
+    <ul>
+      <li> buildUpLimit </li>
+      <li> Depreciation of industry </li>
+      <li> Fineness of timestep/episode length </li>
+      <li> starting_agent_resources </li>
+      <li>initial industry distribution </li>
+      </ul>
 </ul>
