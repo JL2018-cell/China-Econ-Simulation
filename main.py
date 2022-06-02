@@ -1,8 +1,9 @@
 import numpy as np
+import math
+import pandas as pd
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from itertools import product               # Cartesian product for iterators
-
 
 # allow us to re-use the framework from the src directory
 import sys, os
@@ -14,72 +15,44 @@ import optimizer as O                       # stochastic gradient descent optimi
 import solver as S                          # MDP solver (value-iteration)
 import plot as P                            # helper-functions for plotting
 
+PROVINCES = ["GuangDong", "HeBei", "XinJiang"]
+
 def setup_mdp():
     # create our world
-    world = W.IcyGridWorld(size=5, p_slip=0.2)
+    world = W.GridWorld()
 
     # set up the reward function
-    reward = np.zeros(world.n_states)
-    reward[-1] = 1.0
-    reward[8] = 0.65
+    CO2 = {'Agriculture': 2000, 'Energy': 2000, 'Finance': 2000, \
+           'IT': 2000, 'Minerals': 2000, 'Tourism': 2000}
+    GDP = {'Agriculture': 2000, 'Energy': 2000, 'Finance': 2000, \
+           'IT': 2000, 'Minerals': 2000, 'Tourism': 2000}
+    reward = lambda s: np.dot(np.array(GDP.values), s) - np.dot(np.array(CO2.values), s)
 
-    # set up terminal states
-    terminal = [24]
+    # No terminal state
+    terminal = []
 
     return world, reward, terminal
 
 # set-up the GridWorld Markov Decision Process
 world, reward, terminal = setup_mdp()
 
-def generate_expert_trajectories(world, reward, terminal):
-    n_trajectories = 200         # the number of "expert" trajectories
-    discount = 0.9               # discount for constructing an "expert" policy
-    weighting = lambda x: x**50  # down-weight less optimal actions
-    start = [0]                  # starting states for the expert
+# generate some "expert" trajectories from data.
+def generate_expert_trajectories():
+    gdp = pd.read_excel('Data.xlsx', sheet_name = 0, header = 0, index_col = 0)
+    pollutant = pd.read_excel('Data.xlsx', sheet_name = 1, header = 0, index_col = 0)
+    industry = pd.read_excel('Data.xlsx', sheet_name = 2, header = 0, index_col = 0)
 
-    # compute the value-function
-    value = S.value_iteration(world.p_transition, reward, discount)
-    
-    # create our stochastic policy using the value function
-    policy = S.stochastic_policy_from_value(world, value, w=weighting)
-    
-    # a function that executes our stochastic policy by choosing actions according to it
-    policy_exec = T.stochastic_policy_adapter(policy)
-    
-    # generate trajectories
-    tjs = list(T.generate_trajectories(n_trajectories, world, policy_exec, start, terminal))
-    
+    tjs = {}
+
+    for prvn in PROVINCES:
+        tjs[prvn] = industry.loc[[idx for idx in industry.index if prvn in idx]].T.to_numpy()
+
+    policy = []
     return tjs, policy
 
 # generate some "expert" trajectories (and its policy for visualization)
-trajectories, expert_policy = generate_expert_trajectories(world, reward, terminal)
+trajectories, expert_policy = generate_expert_trajectories()
 
-plt.rcParams['figure.figsize'] = [9, 5]     # set default figure size
-style = {                                   # global style for plots
-    'border': {'color': 'red', 'linewidth': 0.5},
-}
-
-fig = plt.figure()
-ax = fig.add_subplot(121)
-ax.title.set_text('Original Reward')
-divider = make_axes_locatable(ax)
-cax = divider.append_axes('right', size='5%', pad=0.05)
-p = P.plot_state_values(ax, world, reward, **style)
-fig.colorbar(p, cax=cax)
-
-ax = fig.add_subplot(122)
-ax.title.set_text('Expert Policy and Trajectories')
-divider = make_axes_locatable(ax)
-cax = divider.append_axes('right', size='5%', pad=0.05)
-p = P.plot_stochastic_policy(ax, world, expert_policy, **style)
-fig.colorbar(p, cax=cax)
-
-for t in trajectories:
-    P.plot_trajectory(ax, world, t, lw=5, color='white', alpha=0.025)
-
-fig.tight_layout()
-#plt.show()
-plt.savefig('plot1.png', dpi=250)
 
 
 # == The Actual Algorithm ==
@@ -183,19 +156,30 @@ def maxent_irl(p_transition, features, terminal, trajectories, optim, init, eps=
     # re-compute per-state reward and return
     return features.dot(omega)
 
+print("Set up features.")
+
 # set up features: we use one feature vector per state
 features = W.state_features(world)
+
+"""
+print("Choose parameters.")
 
 # choose our parameter initialization strategy:
 #   initialize parameters with constant
 init = O.Constant(1.0)
 
+print("Optimizing...")
+
 # choose our optimization strategy:
 #   we select exponentiated stochastic gradient descent with linear learning-rate decay
 optim = O.ExpSga(lr=O.linear_decay(lr0=0.2))
 
+print("RL learning...")
+
 # actually do some inverse reinforcement learning
 reward_maxent = maxent_irl(world.p_transition, features, terminal, trajectories, optim, init)
+
+print("Done!")
 
 fig = plt.figure()
 ax = fig.add_subplot(121)
@@ -241,3 +225,5 @@ fig.colorbar(p, cax=cax)
 fig.tight_layout()
 #plt.show()
 plt.savefig('plot3.png', dpi=250)
+
+"""
