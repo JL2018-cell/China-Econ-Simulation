@@ -129,7 +129,7 @@ print("Start Simulation...")
 done = {"__all__": False}
 actions = {}
 while not done["__all__"]:
-    input("Start new round.")
+    print("Start new round.")
     for agent_idx in obs.keys():
         print("Agent:", agent_idx)
         agent = env.get_agent(agent_idx)
@@ -148,7 +148,8 @@ while not done["__all__"]:
 # trainer.get_policy().get_weights()
 
 # Same as above
-trainer.workers.local_worker().policy_map["default_policy"].get_weights()
+trainer.workers.local_worker().policy_map["a"].get_weights()
+trainer.workers.local_worker().policy_map["p"].get_weights()
 
 # Get list of weights of each worker, including remote replicas
 # trainer.workers.foreach_worker(lambda ev: ev.get_policy().get_weights())
@@ -156,9 +157,7 @@ trainer.workers.local_worker().policy_map["default_policy"].get_weights()
 # Same as above
 # trainer.workers.foreach_worker_with_index(lambda ev, i: ev.get_policy().get_weights())
 
-"""
 # Below, we fetch the dense logs for each rollout worker and environment within
-
 dense_logs = {}
 # Note: worker 0 is reserved for the trainer actor
 for worker in range((trainer_config["num_workers"] > 0), trainer_config["num_workers"] + 1):
@@ -176,7 +175,6 @@ print("Save dense_logs1 in dense_logs.pkl")
 ### 4b. Generate a dense log from the most recent trainer policy model weights
 
 #We may also use the trainer object directly to play out an episode. The advantage of this approach is that we can re-sample the policy model any number of times and generate several rollouts.
-
 
 def generate_rollout_from_current_trainer_policy(
     trainer,
@@ -232,7 +230,6 @@ from utils import plotting  # plotting utilities for visualizing env. state
 
 dense_log_idx = 0
 plotting.breakdown(dense_logs[dense_log_idx]);
-"""
 
 # Shutdown Ray after use
 ray.shutdown()
