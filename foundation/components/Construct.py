@@ -63,6 +63,9 @@ class Construct(BaseComponent):
                 agent.buildUpLimit[industry] += agent.buildUpIncrm[industry]
 
             #Each agent has a prefernce list to construct or vreak industry.
+        for agent in self.world.agents:
+            agent.state["resource_points"] = agent.resource_points
+            agent.state["buildUpLimit"] = agent.buildUpLimit
             """
             action list:
             ['Construct.build_Agriculture', 'Construct.break_Agriculture', 
