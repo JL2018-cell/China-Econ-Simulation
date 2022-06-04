@@ -228,8 +228,7 @@ print("Save dense_logs2 in dense_logs.pkl")
 
 from utils import plotting  # plotting utilities for visualizing env. state
 
-dense_log_idx = 0
-plotting.breakdown(dense_logs[dense_log_idx]);
+plotting.plotting(dense_logs)
 
 # Shutdown Ray after use
 ray.shutdown()
