@@ -388,7 +388,8 @@ class World:
         mobile_class = agent_registry.get("localGov")
         planner_class = agent_registry.get("centralGov")
         self._agents = [
-            mobile_class(self.agent_locs[i], self.buildUpLimit, i, multi_action_mode=self.multi_action_mode_agents)
+            mobile_class(self.agent_names[i], \
+                         self.agent_locs[i], self.buildUpLimit, i, multi_action_mode=self.multi_action_mode_agents)
             for i in range(self.n_agents)
         ]
         self._planner = planner_class(multi_action_mode=self.multi_action_mode_planner)
