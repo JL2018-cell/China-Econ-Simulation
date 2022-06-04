@@ -1,4 +1,5 @@
-
+import matplotlib.pyplot as plt
+import numpy as np
 
 def plotting(dense_logs):
 
@@ -46,15 +47,17 @@ def plotting(dense_logs):
     
     #Plot reward of each agent, include planner.
     n_agents = len(dense_logs[0]['rewards'][0].keys())
-    log2[0]['rewards'][0]
     n_episodes = len(dense_logs[0]['rewards'])
     fig, axs = plt.subplots(n_agents, 1)
-        index = list(range(n_episodes))
+    index = list(range(n_episodes))
     bar_width = 0.3
     opacity = 0.4
     error_config = {'ecolor': '0.3'}
     for n_agn in range(n_agents):
-        rewards = [dense_logs[0]['rewards'][n_ep][str(n_agn)] for n_ep in range(n_episodes)]
+        try:
+            rewards = [dense_logs[0]['rewards'][n_ep][str(n_agn)] for n_ep in range(n_episodes)]
+        except KeyError:
+            rewards = [dense_logs[0]['rewards'][n_ep]["p"] for n_ep in range(n_episodes)]
         axs[n_agn].bar(index, rewards, bar_width, alpha = opacity, error_kw = error_config)
         axs[n_agn].set_ylabel('Rewards')
         axs[n_agn].set_title('Reward by Provinces')
@@ -77,9 +80,9 @@ def plotting(dense_logs):
     x = np.arange(len(labels))  # the label locations
     width = 0.35  # the width of the bars
     for n_agn in range(n_agents):
-        rects1 = axs[n_agn].bar(x - width/2, bldUpLmt_Agr[n_agn], width, label='buildUpLimit - Agriculture')
-        rects2 = axs[n_agn].bar(x, bldUpLmt_Eng[n_agn], width, label='buildUpLimit - Energy')
-        rects3 = axs[n_agn].bar(x + width/2, rsc_pts[n_agn], width, label='Resource points')
+        rects1 = axs[n_agn].bar(x - width/2, bldUpLmt_Agr[n_agn], width, label='agent ' + str(n_agn))
+        rects2 = axs[n_agn].bar(x, bldUpLmt_Eng[n_agn], width, label='agent ' + str(n_agn))
+        rects3 = axs[n_agn].bar(x + width/2, rsc_pts[n_agn], width, label='agent ' + str(n_agn))
         axs[n_agn].set_ylabel('Points')
         axs[n_agn].set_title('Building resourced by Provinces')
         axs[n_agn].set_xticks(x, labels)
@@ -95,13 +98,17 @@ def plotting(dense_logs):
     years = len(dense_logs[0]['actions'])
     for n_agn in range(n_agents):
         if n_agn == 0:
-            actions = set(dense_logs[0]['actions'][n_agn].keys())
+            actions = set(dense_logs[0]['actions'][0][str(n_agn)].keys())
         else:
-            actions = actions | set(dense_logs[0]['actions'][n_agn].keys())
+            try:
+                actions = actions | set(dense_logs[0]['actions'][0][str(n_agn)].keys())
+            except KeyError:
+                pass
+                #actions = actions | set(dense_logs[0]['actions'][0]["p"].keys())
     actions = list(actions)
     
     theta = np.linspace(0.0, 2 * np.pi, len(actions), endpoint=False)
-    radii = np.zeros(n_agents, len(actions))
+    radii = np.zeros((n_agents, len(actions)))
     
     for n_agn in range(n_agents):
         for year in range(years):
@@ -112,9 +119,10 @@ def plotting(dense_logs):
                     pass
                     #radii[n_agn, i] = 0
     
-    colors = plt.cm.viridis(radii / 10.)
-    
-    ax = plt.subplot(projection='polar')
-    ax.bar(theta, radii, width=width, bottom=0.0, color=colors, alpha=0.5, tick_label = actions)
-    
-    plt.savefig("polar_bar.png", dpi = 250)
+    width = 0.3
+
+    for n_agn in range(n_agents):
+        colors = plt.cm.viridis(radii[n_agn, :] / 10.)
+        ax = plt.subplot(projection='polar')
+        ax.bar(theta, radii[n_agn, :], width=width, bottom=0.0, color=colors, alpha=0.5, tick_label = actions)
+        plt.savefig("actions_agent" + str(n_agn) + ".png", dpi = 250)
