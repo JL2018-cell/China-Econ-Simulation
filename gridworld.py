@@ -44,8 +44,12 @@ class GridWorld:
 
     def __init__(self):
         # Industries & Upper limit
-        self.industries = {'Agriculture': 2000, 'Energy': 2000, 'Finance': 2000, \
-                           'IT': 2000, 'Minerals': 2000, 'Tourism': 2000}
+        self.industries = {'Agriculture': 10202, 'Energy': 10202, 'Finance': 10202, \
+                           'IT': 10202, 'Minerals': 10202, 'Tourism': 10202}
+        self.buildUpLimit = {'Agriculture': 10, 'Energy': 10}
+        self.resourcePt_contrib = {"Agriculture": 10, "Energy": 10}
+        self.resource_points = 0
+
         # Build/break industies
         self.actions = np.concatenate((np.eye(len(self.industries.keys())), \
                                        -np.eye(len(self.industries.keys()))), \
@@ -67,11 +71,18 @@ class GridWorld:
 
         # Additional 1 state for each industry is industry = 0.
         self.n_states = math.prod([v + 1 for v in self.industries.values()])
-        self.n_actions = len(self.actions)
+        self.n_actions = self.get_num_actions()
 
         # Agent can only build/break 1 unit in each step.
         # Pr[state_from, state_to, action]
-        self.p_transition = lambda frm, to, act: 0 if np.linalg.norm(frm - to) > 1 else 1
+        self.p_transitions = lambda frm, to, act: 0 if step[0] > self.buildUpLimit['Agriculture'] \
+                                                       or step[1] > self.buildUpLimit['Energy'] \
+                                                       or sum(step[2:]) > self.resource_points \
+                                                    else 1 / self.get_num_actions()
+
+    def get_num_actions(self):
+        self.n_actions = self.buildUpLimit['Agriculture'] * self.buildUpLimit['Energy'] * self.resource_points
+        return self.n_actions
 
     def state_to_int(self, ls, n = 0):
         if len(ls) == 0:
@@ -104,6 +115,10 @@ class GridWorld:
         """
         return s + a
 
-
-
-    
+def state_features(world):
+    # Like progress bar.
+    # industry 1: array([0., 0., 0., ..., 0., 0., 0.])
+    # industry 2: array([0., 0., 0., ..., 0., 0., 0.])
+    # industry 3: array([0., 0., 0., ..., 0., 0., 0.])
+    # ...
+    return np.array([np.zeros(v) for k, v in world.industries.items()]).flatten()
