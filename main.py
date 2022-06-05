@@ -39,33 +39,51 @@ world, reward, terminal = setup_mdp()
 # generate some "expert" trajectories from data.
 def generate_expert_trajectories():
     gdp = pd.read_excel('Data.xlsx', sheet_name = 0, header = 0, index_col = 0)
+    gdp = gdp.fillna(0)
+    gdp = gdp.apply(lambda x: x * 10)
+    gdp = gdp.astype('int32')
     pollutant = pd.read_excel('Data.xlsx', sheet_name = 1, header = 0, index_col = 0)
+    pollutant = pollutant.fillna(0)
+    pollutant = pollutant.apply(lambda x: x * 10)
+    pollutant = pollutant.astype('int32')
     industry = pd.read_excel('Data.xlsx', sheet_name = 2, header = 0, index_col = 0)
+    industry = industry.fillna(0)
+    industry = industry.apply(lambda x: x * 10)
+    industry = industry.astype('int32')
 
     tjs = {}
 
+    # format:
+    # {province name: array([[state 1], [state 2], [state 3], ... [final state]])}
+    # 1 trajectory for each province
     for prvn in PROVINCES:
-        tjs[prvn] = industry.loc[[idx for idx in industry.index if prvn in idx]].T.to_numpy()
+        tjs[prvn] = []
+        hist = industry.loc[[idx for idx in industry.index if prvn in idx]].T.to_numpy()
+        print("Max:", hist.max())
+        for i in range(hist.shape[0] - 1):
+           # [(state, action, next_state)]
+           tjs[prvn].append((hist[i], hist[i + 1] - hist[i], hist[i + 1]))
+        tjs[prvn] = [T.Trajectory(tjs[prvn])]
 
     policy = []
-    return tjs, policy
+    return tjs
 
 # generate some "expert" trajectories (and its policy for visualization)
-trajectories, expert_policy = generate_expert_trajectories()
-
-
+trajectories = generate_expert_trajectories()
 
 # == The Actual Algorithm ==
 
-def feature_expectation_from_trajectories(features, trajectories):
-    n_states, n_features = features.shape
+#Need number of features
+def feature_expectation_from_trajectories(industries, n_states, n_features, features, trajectories):
 
-    fe = np.zeros(n_features)
+    fe = np.zeros(features.shape)
 
     for t in trajectories:                  # for each trajectory
         for s in t.states():                # for each state in trajectory
-            fe += features[s, :]            # sum-up features
-
+            for _s in s:                    # for each item of state
+                print("_s", _s)
+                fe += np.array([np.concatenate((np.ones(_s), np.zeros(v - _s)), axis = 0) \
+                                               for v in industries.values()]).flatten() # sum up features
     return fe / len(trajectories)           # average over trajectories
 
 def initial_probabilities_from_trajectories(n_states, trajectories):
@@ -77,8 +95,7 @@ def initial_probabilities_from_trajectories(n_states, trajectories):
     return p / len(trajectories)            # normalize
 
 
-def compute_expected_svf(p_transition, p_initial, terminal, reward, eps=1e-5):
-    n_states, _, n_actions = p_transition.shape
+def compute_expected_svf(n_states, n_actions, p_transition, p_initial, terminal, reward, eps=1e-5):
     nonterminal = set(range(n_states)) - set(terminal)  # nonterminal states
     
     # Backward Pass
@@ -122,12 +139,12 @@ def compute_expected_svf(p_transition, p_initial, terminal, reward, eps=1e-5):
     # 6. sum-up frequencies
     return d.sum(axis=1)
 
-def maxent_irl(p_transition, features, terminal, trajectories, optim, init, eps=1e-4):
-    n_states, _, n_actions = p_transition.shape
-    _, n_features = features.shape
+def maxent_irl(n_states, n_actions, p_transition, features, terminal, trajectories, optim, init, eps=1e-4):
+    # Refer to self.n_actions, self.n_states defined in gridworld.py
+    n_features = n_states
 
     # compute feature expectation from trajectories
-    e_features = feature_expectation_from_trajectories(features, trajectories)
+    e_features = feature_expectation_from_trajectories(world.industries, n_states, n_features, features, trajectories)
     
     # compute starting-state probabilities from trajectories
     p_initial = initial_probabilities_from_trajectories(n_states, trajectories)
@@ -144,7 +161,7 @@ def maxent_irl(p_transition, features, terminal, trajectories, optim, init, eps=
         reward = features.dot(omega)
 
         # compute gradient of the log-likelihood
-        e_svf = compute_expected_svf(p_transition, p_initial, terminal, reward)
+        e_svf = compute_expected_svf(n_states, n_actions, p_transition, p_initial, terminal, reward)
         grad = e_features - features.T.dot(e_svf)
 
         # perform optimization step and compute delta for convergence
@@ -158,10 +175,9 @@ def maxent_irl(p_transition, features, terminal, trajectories, optim, init, eps=
 
 print("Set up features.")
 
-# set up features: we use one feature vector per state
+# set up features: we use >1 feature vector per state
 features = W.state_features(world)
 
-"""
 print("Choose parameters.")
 
 # choose our parameter initialization strategy:
@@ -174,13 +190,19 @@ print("Optimizing...")
 #   we select exponentiated stochastic gradient descent with linear learning-rate decay
 optim = O.ExpSga(lr=O.linear_decay(lr0=0.2))
 
-print("RL learning...")
+print("Reverse RL learning...")
 
 # actually do some inverse reinforcement learning
-reward_maxent = maxent_irl(world.p_transition, features, terminal, trajectories, optim, init)
+reward_maxent = {}
+for prvn in PROVINCES:
+    reward_maxent[prvn] = maxent_irl(world.n_states, world.n_actions, world.p_transitions, features, terminal, trajectories[prvn], optim, init)
+    print("Finish learning data of", prvn)
 
+pd.DataFrame(reward_maxent).to_pickle("./reward_maxent.pkl", compression='infer', protocol=5, storage_options=None)
 print("Done!")
 
+
+"""
 fig = plt.figure()
 ax = fig.add_subplot(121)
 ax.title.set_text('Original Reward')
