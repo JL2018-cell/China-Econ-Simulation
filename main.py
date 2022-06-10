@@ -17,9 +17,9 @@ import plot as P                            # helper-functions for plotting
 
 PROVINCES = ["GuangDong", "HeBei", "XinJiang"]
 
-def setup_mdp():
+def setup_mdp(max_scale):
     # create our world
-    world = W.GridWorld()
+    world = W.GridWorld(max_scale)
 
     # set up the reward function
     CO2 = {'Agriculture': 2000, 'Energy': 2000, 'Finance': 2000, \
@@ -33,25 +33,27 @@ def setup_mdp():
 
     return world, reward, terminal
 
-# set-up the GridWorld Markov Decision Process
-world, reward, terminal = setup_mdp()
 
 # generate some "expert" trajectories from data.
-def generate_expert_trajectories():
+def generate_expert_trajectories(reduce_scale):
     gdp = pd.read_excel('Data.xlsx', sheet_name = 0, header = 0, index_col = 0)
     gdp = gdp.fillna(0)
-    gdp = gdp.apply(lambda x: x * 10)
-    gdp = gdp.astype('int32')
+    #gdp = gdp.apply(lambda x: x/reduce_scale)
+    #gdp = gdp.round(decimals = 0)
+    #gdp = gdp.astype('int32')
     pollutant = pd.read_excel('Data.xlsx', sheet_name = 1, header = 0, index_col = 0)
     pollutant = pollutant.fillna(0)
-    pollutant = pollutant.apply(lambda x: x * 10)
-    pollutant = pollutant.astype('int32')
+    #pollutant = pollutant.apply(lambda x: x/reduce_scale)
+    #pollutant = pollutant.round(decimals = 0)
+    #pollutant = pollutant.astype('int32')
     industry = pd.read_excel('Data.xlsx', sheet_name = 2, header = 0, index_col = 0)
     industry = industry.fillna(0)
-    industry = industry.apply(lambda x: x * 10)
-    industry = industry.astype('int32')
+    #industry = industry.apply(lambda x: x/reduce_scale)
+    #industry = industry.round(decimals = 0)
+    #industry = industry.astype('int32')
 
     tjs = {}
+    max = 0
 
     # format:
     # {province name: array([[state 1], [state 2], [state 3], ... [final state]])}
@@ -59,31 +61,42 @@ def generate_expert_trajectories():
     for prvn in PROVINCES:
         tjs[prvn] = []
         hist = industry.loc[[idx for idx in industry.index if prvn in idx]].T.to_numpy()
+        hist = hist // reduce_scale + (hist % reduce_scale > (reduce_scale/2))
+        hist = hist.astype('int32')
         print("Max:", hist.max())
+        max = hist.max() if hist.max() > max else max
         for i in range(hist.shape[0] - 1):
            # [(state, action, next_state)]
            tjs[prvn].append((hist[i], hist[i + 1] - hist[i], hist[i + 1]))
         tjs[prvn] = [T.Trajectory(tjs[prvn])]
 
     policy = []
-    return tjs
+    return tjs, max
 
-# generate some "expert" trajectories (and its policy for visualization)
-trajectories = generate_expert_trajectories()
+
+# Given {"a": 2, "b": 3} and both upper limit = 5, then return [1, 1, 0, 0, 0] + [1, 1, 1, 0, 0]
+def state_to_state_vector(industries, state):
+    state_vector = np.array([np.concatenate((np.ones(state[i]), np.zeros(v - state[i])), axis = 0) \
+                                for i, v in enumerate(industries.values())]).flatten()
+    return state_vector
+
+# normalize values in dictionary
+def normalize_dict(d):
+    vs = np.array([v for v in d.values()])
+    return dict(zip(d.keys(), vs / vs.sum()))
+
 
 # == The Actual Algorithm ==
 
-#Need number of features
-def feature_expectation_from_trajectories(industries, n_states, n_features, features, trajectories):
+def feature_expectation_from_trajectories(features, trajectories):
+    n_states, n_features = features.shape
 
-    fe = np.zeros(features.shape)
+    fe = np.zeros(n_features)
 
     for t in trajectories:                  # for each trajectory
         for s in t.states():                # for each state in trajectory
-            for _s in s:                    # for each item of state
-                print("_s", _s)
-                fe += np.array([np.concatenate((np.ones(_s), np.zeros(v - _s)), axis = 0) \
-                                               for v in industries.values()]).flatten() # sum up features
+            fe += features[s, :]            # sum-up features
+
     return fe / len(trajectories)           # average over trajectories
 
 def initial_probabilities_from_trajectories(n_states, trajectories):
@@ -95,7 +108,8 @@ def initial_probabilities_from_trajectories(n_states, trajectories):
     return p / len(trajectories)            # normalize
 
 
-def compute_expected_svf(n_states, n_actions, p_transition, p_initial, terminal, reward, eps=1e-5):
+def compute_expected_svf(p_transition, p_initial, terminal, reward, eps=1e-5):
+    n_states, _, n_actions = p_transition.shape
     nonterminal = set(range(n_states)) - set(terminal)  # nonterminal states
     
     # Backward Pass
@@ -139,12 +153,12 @@ def compute_expected_svf(n_states, n_actions, p_transition, p_initial, terminal,
     # 6. sum-up frequencies
     return d.sum(axis=1)
 
-def maxent_irl(n_states, n_actions, p_transition, features, terminal, trajectories, optim, init, eps=1e-4):
-    # Refer to self.n_actions, self.n_states defined in gridworld.py
-    n_features = n_states
+def maxent_irl(p_transition, features, terminal, trajectories, optim, init, eps=1e-4):
+    n_states, _, n_actions = p_transition.shape
+    _, n_features = features.shape
 
     # compute feature expectation from trajectories
-    e_features = feature_expectation_from_trajectories(world.industries, n_states, n_features, features, trajectories)
+    e_features = feature_expectation_from_trajectories(features, trajectories)
     
     # compute starting-state probabilities from trajectories
     p_initial = initial_probabilities_from_trajectories(n_states, trajectories)
@@ -161,7 +175,7 @@ def maxent_irl(n_states, n_actions, p_transition, features, terminal, trajectori
         reward = features.dot(omega)
 
         # compute gradient of the log-likelihood
-        e_svf = compute_expected_svf(n_states, n_actions, p_transition, p_initial, terminal, reward)
+        e_svf = compute_expected_svf(p_transition, p_initial, terminal, reward)
         grad = e_features - features.T.dot(e_svf)
 
         # perform optimization step and compute delta for convergence
@@ -173,9 +187,23 @@ def maxent_irl(n_states, n_actions, p_transition, features, terminal, trajectori
     # re-compute per-state reward and return
     return features.dot(omega)
 
+# == The Main Program ==
+
+reduce_scale = 30 # 1/10 of original data magnitude.
+
+print("Read trajectories.")
+
+# generate some "expert" trajectories (and its policy for visualization)
+trajectories, max_scale = generate_expert_trajectories(reduce_scale)
+
+print("Set up gridworld.")
+
+# set-up the GridWorld Markov Decision Process
+world, reward, terminal = setup_mdp(max_scale)
+
 print("Set up features.")
 
-# set up features: we use >1 feature vector per state
+# set up features: we use one feature vector per state
 features = W.state_features(world)
 
 print("Choose parameters.")
@@ -190,15 +218,11 @@ print("Optimizing...")
 #   we select exponentiated stochastic gradient descent with linear learning-rate decay
 optim = O.ExpSga(lr=O.linear_decay(lr0=0.2))
 
-print("Reverse RL learning...")
+print("RL learning...")
 
 # actually do some inverse reinforcement learning
-reward_maxent = {}
-for prvn in PROVINCES:
-    reward_maxent[prvn] = maxent_irl(world.n_states, world.n_actions, world.p_transitions, features, terminal, trajectories[prvn], optim, init)
-    print("Finish learning data of", prvn)
+reward_maxent = maxent_irl(world.p_transition, features, terminal, trajectories, optim, init)
 
-pd.DataFrame(reward_maxent).to_pickle("./reward_maxent.pkl", compression='infer', protocol=5, storage_options=None)
 print("Done!")
 
 
@@ -249,4 +273,3 @@ fig.tight_layout()
 plt.savefig('plot3.png', dpi=250)
 
 """
-
