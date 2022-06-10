@@ -42,10 +42,10 @@ class GridWorld:
             direction in terms of coordinates.
     """
 
-    def __init__(self):
+    def __init__(self, max_scale):
         # Industries & Upper limit
-        self.industries = {'Agriculture': 10202, 'Energy': 10202, 'Finance': 10202, \
-                           'IT': 10202, 'Minerals': 10202, 'Tourism': 10202}
+        self.industries = {'Agriculture': max_scale, 'Energy': max_scale, 'Finance': max_scale, \
+                           'IT': max_scale, 'Minerals': max_scale, 'Tourism': max_scale}
         self.buildUpLimit = {'Agriculture': 10, 'Energy': 10}
         self.resourcePt_contrib = {"Agriculture": 10, "Energy": 10}
         self.resource_points = 0
@@ -76,12 +76,29 @@ class GridWorld:
         # Agent can only build/break 1 unit in each step.
         # Pr[state_from, state_to, action]
         self.p_transitions = lambda frm, to, act: 0 if step[0] > self.buildUpLimit['Agriculture'] \
-                                                       or step[1] > self.buildUpLimit['Energy'] \
-                                                       or sum(step[2:]) > self.resource_points \
-                                                    else 1 / self.get_num_actions()
+                                                      or step[1] > self.buildUpLimit['Energy'] \
+                                                      or sum(step[2:]) > self.resource_points \
+                                                   else 1 / self.get_num_actions()
+        self.p_transition = self._transition_prob_table()
+
+    def _transition_prob(s_from, s_to, a):
+        step = s_to - s_from
+        if step[0] > self.buildUpLimit['Agriculture'] \
+           or step[1] > self.buildUpLimit['Energy'] \
+           or sum(step[2:]) > self.resource_points:
+            return 1 / self.get_num_actions()
+        else:
+            return 0
+
+    def _transition_prob_table(self):
+        table = np.zeros(shape=(self.n_states, self.n_states, self.n_actions))
+        s1, s2, a = range(self.n_states), range(self.n_states), range(self.n_actions)
+        for s_from, s_to, a in product(s1, s2, a):
+            table[s_from, s_to, a] = self._transition_prob(s_from, s_to, a)
+        return table
 
     def get_num_actions(self):
-        self.n_actions = self.buildUpLimit['Agriculture'] * self.buildUpLimit['Energy'] * self.resource_points
+        self.n_actions = self.buildUpLimit['Agriculture'] * self.buildUpLimit['Energy'] * (1 + self.resource_points)
         return self.n_actions
 
     def state_to_int(self, ls, n = 0):
