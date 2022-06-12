@@ -18,8 +18,8 @@ Some general remarks:
 
 import numpy as np
 import math
-from itertools import product
-
+from itertools import product, permutations
+from sklearn.preprocessing import StandardScaler
 
 class GridWorld:
     """
@@ -41,6 +41,35 @@ class GridWorld:
         actions: The actions of this world as paris, indicating the
             direction in terms of coordinates.
     """
+    class prob_transition:
+        def __init__(self, n_states, n_actions, buildUpLimit, resource_points):
+            self.buildUpLimit = buildUpLimit
+            self.n_actions = n_actions
+            self.resource_points = resource_points
+            self.shape = (n_states, n_states, n_actions)
+        def shape(self):
+            return self.shape
+        def state_to_int(self, state):
+            base = 10
+            result = 0
+            for c, i in enumerate(state):
+                result += i * 10**(len(state) - c)
+            return result
+        def histogram(self, n_states, trajectories):
+            p = np.zeros(n_states)
+        
+            for t in trajectories:                  # for each trajectory
+                p[self.state_to_int(t.transitions()[0][0])] += 1.0     # increment starting state
+        
+            return p / len(trajectories)            # normalize
+        def transition_func(self, frm, to, act):
+            step = to - frm
+            if step[0] > self.buildUpLimit['Agriculture'] \
+              or step[1] > self.buildUpLimit['Energy'] \
+              or sum(step[2:]) > self.resource_points:
+                return 0
+            else:
+                return 1 / self.n_actions
 
     def __init__(self, max_scale):
         # Industries & Upper limit
@@ -48,7 +77,7 @@ class GridWorld:
                            'IT': max_scale, 'Minerals': max_scale, 'Tourism': max_scale}
         self.buildUpLimit = {'Agriculture': 10, 'Energy': 10}
         self.resourcePt_contrib = {"Agriculture": 10, "Energy": 10}
-        self.resource_points = 0
+        self.resource_points = 2
 
         # Build/break industies
         self.actions = np.concatenate((np.eye(len(self.industries.keys())), \
@@ -73,29 +102,8 @@ class GridWorld:
         self.n_states = math.prod([v + 1 for v in self.industries.values()])
         self.n_actions = self.get_num_actions()
 
-        # Agent can only build/break 1 unit in each step.
-        # Pr[state_from, state_to, action]
-        self.p_transitions = lambda frm, to, act: 0 if step[0] > self.buildUpLimit['Agriculture'] \
-                                                      or step[1] > self.buildUpLimit['Energy'] \
-                                                      or sum(step[2:]) > self.resource_points \
-                                                   else 1 / self.get_num_actions()
-        self.p_transition = self._transition_prob_table()
-
-    def _transition_prob(s_from, s_to, a):
-        step = s_to - s_from
-        if step[0] > self.buildUpLimit['Agriculture'] \
-           or step[1] > self.buildUpLimit['Energy'] \
-           or sum(step[2:]) > self.resource_points:
-            return 1 / self.get_num_actions()
-        else:
-            return 0
-
-    def _transition_prob_table(self):
-        table = np.zeros(shape=(self.n_states, self.n_states, self.n_actions))
-        s1, s2, a = range(self.n_states), range(self.n_states), range(self.n_actions)
-        for s_from, s_to, a in product(s1, s2, a):
-            table[s_from, s_to, a] = self._transition_prob(s_from, s_to, a)
-        return table
+        self.p_transition = self.prob_transition(self.n_states, self.n_actions, \
+                                                 self.buildUpLimit, self.resource_points)
 
     def get_num_actions(self):
         self.n_actions = self.buildUpLimit['Agriculture'] * self.buildUpLimit['Energy'] * (1 + self.resource_points)
@@ -132,10 +140,22 @@ class GridWorld:
         """
         return s + a
 
-def state_features(world):
-    # Like progress bar.
-    # industry 1: array([0., 0., 0., ..., 0., 0., 0.])
-    # industry 2: array([0., 0., 0., ..., 0., 0., 0.])
-    # industry 3: array([0., 0., 0., ..., 0., 0., 0.])
-    # ...
-    return np.array([np.zeros(v) for k, v in world.industries.items()]).flatten()
+    # Return all possible actions
+    def all_actions(self):
+        many_actions = self.state_features(self.industries)
+        return np.array(list(filter(lambda x: x[0] <= self.buildUpLimit['Agriculture'] \
+                                              and x[1] <= self.buildUpLimit['Energy'] \
+                                              and x[2:].sum() <= self.resource_points, many_actions)))
+    # Return all possible states
+    def state_features(self, d):
+        x = d
+        state = np.zeros(len(x.values()))
+        all_states = state.reshape(1, state.shape[0])
+        for i, limit in enumerate(x.values()):
+            for j in range(limit):
+                state[i] += 1
+                for pemu in set(permutations(state)):
+                    all_states = np.concatenate((all_states, np.array(pemu).reshape(1, len(pemu))), axis = 0)
+        return all_states
+    
+    
