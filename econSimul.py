@@ -10,6 +10,7 @@ import foundation
 import numpy as np
 import random
 import matplotlib.pyplot as plt
+import pickle
 
 env_config = {
     'scenario_name': 'layout/MacroEcon',
@@ -22,7 +23,7 @@ env_config = {
     'allow_observation_scaling': False,
     # Upper limit of industries that localGov can build per timestep.
     'buildUpLimit': {'Agriculture': 10, 'Energy': 10},
-    'episode_length': 10, # Number of timesteps per episode
+    'episode_length': 2, # Number of timesteps per episode
     'flatten_observations': False,
     'flatten_masks': False,
 
@@ -40,7 +41,8 @@ env_config = {
                                'IT': 2000, 'Minerals': 2000, 'Tourism': 2000}, #Help to define actions of localGov
 
     # (optional) kwargs of the chosen scenario class
-    'starting_agent_resources': {"Food": 10., "Energy": 10.} #food, energy
+    'starting_agent_resources': {"Food": 10., "Energy": 10.}, #food, energy
+    'dense_log_frequency': 1
 }
 
 env = foundation.make_env_instance(**env_config)
@@ -122,6 +124,12 @@ for agent_idx, reward in rew.items():
 print("Done")
 print(done)
 
+dense_logs = env.dense_log
+with open('dense_logs_random.pkl', 'wb') as f:
+    pickle.dump(dense_logs, f)
+print("Save dense logs in dense_logs_random.pkl")
+
+"""
 #Plot graph
 #Show location of agents
 xs = [x for x, y in env_config['agent_locs']]
@@ -150,6 +158,8 @@ for i, agent_idx in enumerate(obs.keys()):
     if agent_idx != 'p':
         axs[i // 2][i % 2].hist(obs[agent_idx]['world-actions'])
 plt.show()
+
+"""
 
 """
 #Histogram
