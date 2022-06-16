@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 import argparse
 from collections import namedtuple
@@ -11,6 +12,7 @@ from deep_maxent_irl import *
 from maxent_irl import *
 from utils import *
 from lp_irl import *
+import foundation
 
 Step = namedtuple('Step','cur_state action next_state reward done')
 
@@ -27,6 +29,7 @@ PARSER.add_argument('--no-rand_start', dest='rand_start',action='store_false', h
 PARSER.set_defaults(rand_start=True)
 PARSER.add_argument('-lr', '--learning_rate', default=0.02, type=float, help='learning rate')
 PARSER.add_argument('-ni', '--n_iters', default=20, type=int, help='number of iterations')
+PARSER.add_argument('-d', '--data_src', default="Data.xlsx", type=str, help='data source path')
 ARGS = PARSER.parse_args()
 print("ARGS:", ARGS)
 
@@ -41,79 +44,103 @@ L_TRAJ = ARGS.l_traj
 RAND_START = ARGS.rand_start
 LEARNING_RATE = ARGS.learning_rate
 N_ITERS = ARGS.n_iters
+DATA_SRC = ARGS.data_src
+PROVINCES = ["GuangDong", "HeBei", "XinJiang"]
 
+def generate_demonstrations():
+    gdp = pd.read_excel(DATA_SRC, sheet_name = 0, header = 0, index_col = 0)
+    gdp = gdp.fillna(0)
+    #gdp = gdp.apply(lambda x: x/reduce_scale)
+    #gdp = gdp.round(decimals = 0)
+    #gdp = gdp.astype('int32')
+    pollutant = pd.read_excel(DATA_SRC, sheet_name = 1, header = 0, index_col = 0)
+    pollutant = pollutant.fillna(0)
+    #pollutant = pollutant.apply(lambda x: x/reduce_scale)
+    #pollutant = pollutant.round(decimals = 0)
+    #pollutant = pollutant.astype('int32')
+    industry = pd.read_excel(DATA_SRC, sheet_name = 2, header = 0, index_col = 0)
+    industry = industry.fillna(0)
+    #industry = industry.apply(lambda x: x/reduce_scale)
+    #industry = industry.round(decimals = 0)
+    #industry = industry.astype('int32')
 
-def generate_demonstrations(gw, policy, n_trajs=100, len_traj=20, rand_start=False, start_pos=[0,0]):
-  """gatheres expert demonstrations
+    tjs = {}
+    max = 0
+    base_yr = min(industry.columns)
 
-  inputs:
-  gw          Gridworld - the environment
-  policy      Nx1 matrix
-  n_trajs     int - number of trajectories to generate
-  rand_start  bool - randomly picking start position or not
-  start_pos   2x1 list - set start position, default [0,0]
-  returns:
-  trajs       a list of trajectories - each element in the list is a list of Steps representing an episode
-  """
+    # format:
+    # {province name: array([[state 1], [state 2], [state 3], ... [final state]])}
+    # 1 trajectory for each province
+    # Example: Step(cur_state = [1, 2, 3], action = [0, 0, 0], next_state = [1, 2, 3], reward = 0, done = False)
+    for prvn in PROVINCES:
+        tjs[prvn] = []
+        hist = industry.loc[[idx for idx in industry.index if prvn in idx]].T.to_numpy()
+        print("Max:", hist.max())
+        max = hist.max() if hist.max() > max else max
+        for i in range(hist.shape[0] - 1):
+           reward = gdp.loc[prvn, base_yr + i] - pollutant.loc[[idx for idx in pollutant.index if "GuangDong" in idx]].sum()[base_yr + i]
+           # [(state, action, next_state)]
+           tjs[prvn].append(Step(cur_state = hist[i], action = hist[i + 1] - hist[i], next_state = hist[i + 1], reward = reward, done = False))
 
-  trajs = []
-  for i in range(n_trajs):
-    if rand_start:
-      # override start_pos
-      start_pos = [np.random.randint(0, gw.height), np.random.randint(0, gw.width)]
-
-    episode = []
-    gw.reset(start_pos)
-    cur_state = start_pos
-    cur_state, action, next_state, reward, is_done = gw.step(int(policy[gw.pos2idx(cur_state)]))
-    episode.append(Step(cur_state=gw.pos2idx(cur_state), action=action, next_state=gw.pos2idx(next_state), reward=reward, done=is_done))
-    # while not is_done:
-    for _ in range(len_traj):
-        cur_state, action, next_state, reward, is_done = gw.step(int(policy[gw.pos2idx(cur_state)]))
-        episode.append(Step(cur_state=gw.pos2idx(cur_state), action=action, next_state=gw.pos2idx(next_state), reward=reward, done=is_done))
-        if is_done:
-            break
-    trajs.append(episode)
-  return trajs
+    return tjs, max
 
 
 def main():
-  N_STATES = H * W
-  N_ACTIONS = 5
 
-  rmap_gt = np.zeros([H, W])
-  rmap_gt[H-1, W-1] = R_MAX
-  rmap_gt[0, W-1] = R_MAX
-  rmap_gt[H-1, 0] = R_MAX
 
-  gw = gridworld.GridWorld(rmap_gt, {}, 1 - ACT_RAND)
-
-  rewards_gt = np.reshape(rmap_gt, H*W, order='F')
-  P_a = gw.get_transition_mat()
-
-  values_gt, policy_gt = value_iteration.value_iteration(P_a, rewards_gt, GAMMA, error=0.01, deterministic=True)
+  # replace with MacroEcon layout env
+  env_config = {
+      'scenario_name': 'layout/MacroEcon',
+      #to be contnued after layout construction on foundation/scenarios/MacroEcon.
+      'world_size': [100, 100],
+      'n_agents': 3,
+      'agent_names': ["GuangDong", "HeBei", "XinJiang"],
+      'agent_locs': [(80, 10), (50, 50), (10, 60)],
+      'multi_action_mode_agents': True,
+      'allow_observation_scaling': False,
+      # Upper limit of industries that localGov can build per timestep.
+      'buildUpLimit': {'Agriculture': 10, 'Energy': 10},
+      'episode_length': 2, # Number of timesteps per episode
+      'flatten_observations': False,
+      'flatten_masks': False,
   
-  # use identity matrix as feature
-  feat_map = np.eye(N_STATES)
+      'components': [
+          #Build industries
+          {"Construct": {"punishment": 0.5, "num_ep_to_recover": 5}},
+          #Exchange resources, industry points by auction.
+          {'ContinuousDoubleAuction': {'max_num_orders': 5}},
+      ],
+  
+      # Industries available in this world.
+      'industries': {'Agriculture': 2000, 'Energy': 2000, 'Finance': 2000, \
+                                 'IT': 2000, 'Minerals': 2000, 'Tourism': 2000}, #Help to define actions of localGov
+  
+      # (optional) kwargs of the chosen scenario class
+      'starting_agent_resources': {"Food": 10., "Energy": 10.}, #food, energy
+      'industry_depreciation': {"GuangDong": {'Agriculture': 1, 'Energy': 1, 'Finance': 1, 'IT': 1, 'Minerals': 1, 'Tourism': 1}, "HeBei": {'Agriculture': 1, 'Energy': 1, 'Finance': 1, 'IT': 1, 'Minerals': 1, 'Tourism': 1}, "XinJiang": {'Agriculture': 1, 'Energy': 1, 'Finance': 1, 'IT': 1, 'Minerals': 1, 'Tourism': 1}}, #Help to calculate rewards.
+      'industry_init_dstr': {"GuangDong": {'Agriculture': 1, 'Energy': 1, 'Finance': 1, 'IT': 1, 'Minerals': 1, 'Tourism': 1}, "HeBei": {'Agriculture': 1, 'Energy': 1, 'Finance': 1, 'IT': 1, 'Minerals': 1, 'Tourism': 1}, "XinJiang": {'Agriculture': 1, 'Energy': 1, 'Finance': 1, 'IT': 1, 'Minerals': 1, 'Tourism': 1}}, #Help to calculate rewards.
+      'industry_weights': {"GuangDong": {'Agriculture': 1., 'Energy': 1., 'Finance': 1., 'IT': 1., 'Minerals': 1., 'Tourism': 1.}, "HeBei": {'Agriculture': 1., 'Energy': 1., 'Finance': 1., 'IT': 1., 'Minerals': 1., 'Tourism': 1.}, "XinJiang": {'Agriculture': 1., 'Energy': 1., 'Finance': 1., 'IT': 1., 'Minerals': 1., 'Tourism': 1.}}, #Help to calculate rewards.
+      'dense_log_frequency': 1
+  }
+  gw = foundation.make_env_instance(**env_config)
+  obs = gw.reset()
 
-  trajs = generate_demonstrations(gw, policy_gt, n_trajs=N_TRAJS, len_traj=L_TRAJ, rand_start=RAND_START)
+  # Generate expert trajectories
+  # Example: Step(cur_state = [1, 2, 3], action = [0, 0, 0], next_state = [1, 2, 3], reward = 0, done = False)
+  trajs, max = generate_demonstrations()
+
+  # Use neural network to remeber reward
+  # Or use lambda function
+  P_a = gw.get_transition_pr(0)
+
+  # use identity matrix as feature
+  N_STATES = H * W
+  feat_map = np.eye(N_STATES)
   
   print('Deep Max Ent IRL training ..')
-  rewards = deep_maxent_irl(feat_map, P_a, GAMMA, trajs, LEARNING_RATE, N_ITERS)
+  rewards = deep_maxent_irl(gw.world.agents[0].state["inventory"], feat_map, P_a, GAMMA, trajs, LEARNING_RATE, N_ITERS)
 
   values, _ = value_iteration.value_iteration(P_a, rewards, GAMMA, error=0.01, deterministic=True)
-  # plots
-  plt.figure(figsize=(20,4))
-  plt.subplot(1, 4, 1)
-  img_utils.heatmap2d(np.reshape(rewards_gt, (H,W), order='F'), 'Rewards Map - Ground Truth', block=False)
-  plt.subplot(1, 4, 2)
-  img_utils.heatmap2d(np.reshape(values_gt, (H,W), order='F'), 'Value Map - Ground Truth', block=False)
-  plt.subplot(1, 4, 3)
-  img_utils.heatmap2d(np.reshape(rewards, (H,W), order='F'), 'Reward Map - Recovered', block=False)
-  plt.subplot(1, 4, 4)
-  img_utils.heatmap2d(np.reshape(values, (H,W), order='F'), 'Value Map - Recovered', block=False)
-  plt.savefig("deep_maxent_irl_gridworld.png")
-
 
 
 
