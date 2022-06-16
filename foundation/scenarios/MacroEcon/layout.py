@@ -18,8 +18,11 @@ class MacroEconLayout(BaseEnvironment):
   required_industries = ['Agriculture', 'Energy', 'Finance', 'IT', 'Minerals', 'Tourism']
   required_entities = required_industries
 
-  def __init__(self, starting_agent_resources, industries, **kwargs):
-      #Total CO2 emission of all localGov.
+  def __init__(self, starting_agent_resources, industries, industry_depreciation, **kwargs):
+      # Depreciation of industry in each time step.
+      # Format: {"agent 1": {industry 1: int}, "agent 2": ...}
+      self.industry_depreciation = industry_depreciation
+      # Total CO2 emission of all localGov.
       self.total_CO2 = 0.
       self.world_size = [100, 100]
       self.energy_cost = 100
@@ -50,8 +53,7 @@ class MacroEconLayout(BaseEnvironment):
       #Assume all weights = 1
       rewards = {}
       for agent in self.world.agents:
-          #rewards[agent.idx] = sum(agent.state['inventory'].values()) + sum(agent.state['endogenous'].values())
-          weights = np.array([1 for i in list(agent.state['inventory'].keys()) + list(agent.state['endogenous'].keys())])
+          weights = np.array(list(agent.industry_weights.values()) + [1. for i in agent.state['endogenous'].keys()])
           rewards[agent.idx] = np.dot(np.array(list(agent.state['inventory'].values()) + list(agent.state['endogenous'].values())), weights)
       rewards[self.world.planner.idx] = self.total_GDP - self.total_CO2
       print("In layout, rewards:", rewards)
@@ -82,7 +84,9 @@ class MacroEconLayout(BaseEnvironment):
 
   def scenario_step(self):
       for agent in self.world.agents:
+          # Agrivulture and energy industry produce resource points to build other industries
           agent.resource_points += self.resourcePt_contrib["Agriculture"] + self.resourcePt_contrib["Energy"]
+          # Calculate cumulative CO2, GDP produced by each industry in each agent.
           for k, v in agent.action.items():
               if v > 0:
                   industry = k.split("_")[-1]
@@ -90,6 +94,20 @@ class MacroEconLayout(BaseEnvironment):
                       agent.state['endogenous']['CO2'] += self.CO2_contrib[industry]
                   except KeyError:
                       pass
+                  try:
+                      agent.state['endogenous']['GDP'] += self.GDP_contrib[industry]
+                  except KeyError:
+                      pass
+          # Industry depreciate over time.
+          for industry in agent.state['inventory'].keys():
+              if agent.state["inventory"][industry] - self.industry_depreciation[agent.state["name"]][industry] > 0:
+                  agent.state['inventory'][industry] -= self.industry_depreciation[agent.state["name"]][industry]
+              else:
+                  agent.state['inventory'][industry] = 0
+
+          #agent.state['inventory'] = {k: agent.state["inventory"][k] - v 
+          #                            for k, v in self.industry_depreciation[agent.state["name"]].items()
+          #                            if agent.state["inventory"][k] - v > 0 else k: 0}
       self.total_CO2 = sum([agent.state['endogenous']['CO2'] for agent in self.world.agents])
       self.total_GDP = sum([agent.state['endogenous']['GDP'] for agent in self.world.agents])
       self.agric += 1.
