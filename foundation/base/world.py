@@ -367,6 +367,7 @@ class World:
         agent_names,
         agent_locs,
         buildUpLimit,
+        industry_weights,
         world_resources,
         world_landmarks,
         multi_action_mode_agents,
@@ -377,6 +378,7 @@ class World:
         self.agent_names = agent_names
         self.agent_locs = agent_locs
         self.buildUpLimit = buildUpLimit
+        self.industry_weights = industry_weights
         self.resources = world_resources
         self.landmarks = world_landmarks
         self.multi_action_mode_agents = bool(multi_action_mode_agents)
@@ -389,7 +391,11 @@ class World:
         planner_class = agent_registry.get("centralGov")
         self._agents = [
             mobile_class(self.agent_names[i], \
-                         self.agent_locs[i], self.buildUpLimit, i, multi_action_mode=self.multi_action_mode_agents)
+                         self.agent_locs[i], \
+                         self.buildUpLimit, \
+                         self.industry_weights[self.agent_names[i]], \
+                         i, \
+                         multi_action_mode=self.multi_action_mode_agents)
             for i in range(self.n_agents)
         ]
         self._planner = planner_class(multi_action_mode=self.multi_action_mode_planner)
