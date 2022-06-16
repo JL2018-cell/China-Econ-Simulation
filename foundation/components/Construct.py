@@ -17,9 +17,12 @@ class Construct(BaseComponent):
     agent_subclasses = ["localGov"]
 
 
-    def __init__(self, *base_component_args, payment=10, **base_component_kwargs):
+    def __init__(self, *base_component_args, payment=10, \
+                 punishment = 0, num_ep_to_recover = 1, **base_component_kwargs):
         super().__init__(*base_component_args, **base_component_kwargs)
         self.payment = payment
+        self.num_ep_to_recover = num_ep_to_recover
+        self.punishment = punishment
 
     def component_step(self):
         world = self.world
@@ -43,7 +46,9 @@ class Construct(BaseComponent):
                                     agent.resource_points += magnitude
                         else:
                             #Incorporate punishment of agent acts outside limit.
-                            pass
+                            new_weight = agent.industry_weights[target_industry] - self.punishment
+                            if new_weight > 0:
+                                agent.industry_weights[target_industry] = new_weight
                     elif "build_" in action:
                         target_industry = action.split("_")[-1]
                         # After building industry, resultant resource point allocated on it should not > preference i.e. upper limit.
@@ -57,7 +62,10 @@ class Construct(BaseComponent):
                                     agent.resource_points -= magnitude
                         else:
                             #Incorporate punishment of agent acts outside limit.
-                            pass
+                            new_weight = agent.industry_weights[target_industry] - self.punishment
+                            if new_weight > 0:
+                                agent.industry_weights[target_industry] = new_weight
+
             # In the next timestep, agent gets resources to build Agriculture and Energy industry.
             for industry in agent.buildUpLimit.keys():
                 agent.buildUpLimit[industry] += agent.buildUpIncrm[industry]
