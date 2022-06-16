@@ -1,5 +1,7 @@
 import numpy as np
 import tensorflow as tf
+from tensorflow.keras import Sequential
+from tensorflow.keras.layers import Dense
 #import tensorflow.compat.v1 as tf
 #tf.disable_v2_behavior()
 import mdp.gridworld as gridworld
@@ -20,47 +22,20 @@ class DeepIRLFC:
     self.n_h2 = n_h2
     self.name = name
 
-    self.sess = tf.compat.v1.Session()
-    self.input_s, self.reward, self.theta = self._build_network(self.name)
-    self.optimizer = tf.compat.v1.train.GradientDescentOptimizer(lr)
-    
-    self.grad_r = tf.compat.v1.placeholder(tf.float32, [None, 1])
-    self.l2_loss = tf.add_n([tf.nn.l2_loss(v) for v in self.theta])
-    self.grad_l2 = tf.gradients(self.l2_loss, self.theta)
-
-    self.grad_theta = tf.gradients(self.reward, self.theta, -self.grad_r)
-    # apply l2 loss gradients
-    self.grad_theta = [tf.add(l2*self.grad_l2[i], self.grad_theta[i]) for i in range(len(self.grad_l2))]
-    self.grad_theta, _ = tf.clip_by_global_norm(self.grad_theta, 100.0)
-
-    self.grad_norms = tf.linalg.global_norm(self.grad_theta)
-    self.optimize = self.optimizer.apply_gradients(zip(self.grad_theta, self.theta))
-    self.sess.run(tf.compat.v1.global_variables_initializer())
-
-
-  def _build_network(self, name):
-    tf.compat.v1.disable_eager_execution()
-    input_s = tf.compat.v1.placeholder(tf.float32, [None, self.n_input])
-    with tf.compat.v1.variable_scope(name):
-      fc1 = tf_utils.fc(input_s, self.n_h1, scope="fc1", activation_fn=tf.nn.elu, \
-        initializer = tf.keras.initializers.VarianceScaling(mode="fan_in"))
-        #initializer=tf.layers.variance_scaling_initializer(mode="FAN_IN"))
-      fc2 = tf_utils.fc(fc1, self.n_h2, scope="fc2", activation_fn=tf.nn.elu, \
-        initializer = tf.keras.initializers.VarianceScaling(mode="fan_in"))
-        #initializer=tf.layers.variance_scaling_initializer(mode="FAN_IN"))
-      reward = tf_utils.fc(fc2, 1, scope="reward")
-    theta = tf.compat.v1.get_collection(tf.compat.v1.GraphKeys.TRAINABLE_VARIABLES, scope=name)
-    return input_s, reward, theta
-
+    self.model = tf.keras.Sequential()
+    self.model.add(Dense(n_input, activation='relu', kernel_initializer='he_normal', input_shape=(n_input,)))
+    self.model.add(Dense(n_input, activation='relu', kernel_initializer='he_normal', input_shape=(n_input,)))
+    self.model.add(Dense(n_input, activation='relu', kernel_initializer='he_normal', input_shape=(n_input,)))
+    self.model.add(Dense(1, activation='sigmoid'))
+    self.model.summary()
+    self.model.compile(optimizer='adam', loss = "MeanSquaredError", metrics=['accuracy'])
 
   def get_theta(self):
     return self.sess.run(self.theta)
 
-
   def get_rewards(self, states):
     rewards = self.sess.run(self.reward, feed_dict={self.input_s: states})
     return rewards
-
 
   def apply_grads(self, feat_map, grad_r):
     grad_r = np.reshape(grad_r, [-1, 1])
@@ -122,7 +97,7 @@ def demo_svf(trajs, n_states):
   p = p/len(trajs)
   return p
 
-def deep_maxent_irl(feat_map, P_a, gamma, trajs, lr, n_iters):
+def deep_maxent_irl(industries, feat_map, P_a, gamma, trajs, lr, n_iters):
   """
   Maximum Entropy Inverse Reinforcement Learning (Maxent IRL)
 
@@ -145,9 +120,10 @@ def deep_maxent_irl(feat_map, P_a, gamma, trajs, lr, n_iters):
   N_STATES, _, N_ACTIONS = np.shape(P_a)
 
   # init nn model
-  nn_r = DeepIRLFC(feat_map.shape[1], lr, 3, 3)
+  nn_r = DeepIRLFC(len(industries), lr)
 
   # find state visitation frequencies using demonstrations
+  # Use DNN to remeber histogram
   mu_D = demo_svf(trajs, N_STATES)
 
   # training 
