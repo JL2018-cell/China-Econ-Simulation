@@ -79,11 +79,15 @@ class BaseAgent:
         """Index used to identify this agent. Must be unique within the environment."""
         return self._idx
 
-    def register_inventory(self, resources):
+    def register_inventory(self, resources, industry_distribution = {}):
         """Used during environment construction to populate inventory/escrow fields."""
         assert not self._registered_inventory
-        for entity_name in resources:
-            self.inventory[entity_name] = 0
+        if sorted(resources) == sorted(list(industry_distribution.keys())):
+            for entity_name in resources:
+                self.inventory[entity_name] = industry_distribution[entity_name]
+        else:
+            for entity_name in resources:
+                self.inventory[entity_name] = 0
             #self.escrow[entity_name] = 0
         #self.escrow['resource_points'] = 0
         #for k, v in self.buildUpLimit.items():
