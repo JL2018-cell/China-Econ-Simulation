@@ -29,7 +29,7 @@ env_config = {
 
     'components': [
         #Build industries
-        {"Construct": {}},
+        {"Construct": {"punishment": 0.5, "num_ep_to_recover": 5}},
         #Import resources from other provinces
         {"Transport": {}},
         #Exchange resources, industry points by auction.
@@ -42,6 +42,9 @@ env_config = {
 
     # (optional) kwargs of the chosen scenario class
     'starting_agent_resources': {"Food": 10., "Energy": 10.}, #food, energy
+    'industry_depreciation': {"GuangDong": {'Agriculture': 1, 'Energy': 1, 'Finance': 1, 'IT': 1, 'Minerals': 1, 'Tourism': 1}, "HeBei": {'Agriculture': 1, 'Energy': 1, 'Finance': 1, 'IT': 1, 'Minerals': 1, 'Tourism': 1}, "XinJiang": {'Agriculture': 1, 'Energy': 1, 'Finance': 1, 'IT': 1, 'Minerals': 1, 'Tourism': 1}}, #Help to calculate rewards.
+    'industry_init_dstr': {"GuangDong": {'Agriculture': 1, 'Energy': 1, 'Finance': 1, 'IT': 1, 'Minerals': 1, 'Tourism': 1}, "HeBei": {'Agriculture': 1, 'Energy': 1, 'Finance': 1, 'IT': 1, 'Minerals': 1, 'Tourism': 1}, "XinJiang": {'Agriculture': 1, 'Energy': 1, 'Finance': 1, 'IT': 1, 'Minerals': 1, 'Tourism': 1}}, #Help to calculate rewards.
+    'industry_weights': {"GuangDong": {'Agriculture': 1., 'Energy': 1., 'Finance': 1., 'IT': 1., 'Minerals': 1., 'Tourism': 1.}, "HeBei": {'Agriculture': 1., 'Energy': 1., 'Finance': 1., 'IT': 1., 'Minerals': 1., 'Tourism': 1.}, "XinJiang": {'Agriculture': 1., 'Energy': 1., 'Finance': 1., 'IT': 1., 'Minerals': 1., 'Tourism': 1.}}, #Help to calculate rewards.
     'dense_log_frequency': 1
 }
 
