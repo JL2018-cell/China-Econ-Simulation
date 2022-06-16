@@ -183,6 +183,8 @@ class BaseEnvironment(ABC):
         agent_locs=None,
         world_size=None,
         buildUpLimit = 10,
+        industry_weights = {},
+        industry_init_dstr = {},
         episode_length=1000,
         multi_action_mode_agents=False,
         multi_action_mode_planner=True,
@@ -233,6 +235,9 @@ class BaseEnvironment(ABC):
 
         # Upper limit of industries that localGov can build per timestep.
         self.buildUpLimit = buildUpLimit
+
+        # Upper limit of industries that localGov can build per timestep.
+        self.industry_weights = industry_weights
 
         # Foundation assumes there's only a single planner
         n_planners = 1
@@ -331,6 +336,7 @@ class BaseEnvironment(ABC):
             self.agent_names,
             self.agent_locs,
             self.buildUpLimit,
+            self.industry_weights,
             self.resources,
             self.landmarks,
             self.multi_action_mode_agents,
@@ -352,7 +358,7 @@ class BaseEnvironment(ABC):
         # Register the components with the agents
         # to finish setting up their state/action spaces.
         for agent in self.world.agents:
-            agent.register_inventory(self.resources)
+            agent.register_inventory(self.resources, industry_init_dstr[agent.state["name"]])
             agent.register_escrow()
             agent.register_endogenous(self.endogenous)
             agent.register_components(self._components)
