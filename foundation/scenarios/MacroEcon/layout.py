@@ -18,7 +18,7 @@ class MacroEconLayout(BaseEnvironment):
   required_industries = ['Agriculture', 'Energy', 'Finance', 'IT', 'Minerals', 'Tourism']
   required_entities = required_industries
 
-  def __init__(self, starting_agent_resources, industries, industry_depreciation, **kwargs):
+  def __init__(self, starting_agent_resources, contribution, industries, industry_depreciation, **kwargs):
       # Depreciation of industry in each time step.
       # Format: {"agent 1": {industry 1: int}, "agent 2": ...}
       self.industry_depreciation = industry_depreciation
@@ -30,9 +30,9 @@ class MacroEconLayout(BaseEnvironment):
       self.pt_per_day = 100
       self.toCarbonEffcy = 0.5
       self.toGDPEffcy = 0.5
-      self.resourcePt_contrib = {"Agriculture": 10, "Energy": 10}
-      self.GDP_contrib = {"Agriculture": 100, "Energy": 50}
-      self.CO2_contrib = {"Agriculture": 110, "Energy": 100} 
+      self.resourcePt_contrib = contribution["resource_points"]
+      self.GDP_contrib = contribution["GDP"]
+      self.CO2_contrib = contribution["CO2"]
       self.agric = starting_agent_resources["Food"]
       self.energy = starting_agent_resources["Energy"]
       self.resource_points = 100.
@@ -84,18 +84,19 @@ class MacroEconLayout(BaseEnvironment):
 
   def scenario_step(self):
       for agent in self.world.agents:
-          # Agrivulture and energy industry produce resource points to build other industries
-          agent.resource_points += self.resourcePt_contrib["Agriculture"] + self.resourcePt_contrib["Energy"]
+          agent_name = agent.state["name"]
+          # Agriculture and energy industry produce resource points to build other industries
+          agent.resource_points += sum(self.resourcePt_contrib[agent_name].values())
           # Calculate cumulative CO2, GDP produced by each industry in each agent.
           for k, v in agent.action.items():
               if v > 0:
                   industry = k.split("_")[-1]
                   try:
-                      agent.state['endogenous']['CO2'] += self.CO2_contrib[industry]
+                      agent.state['endogenous']['CO2'] += self.CO2_contrib[agent_name][industry]
                   except KeyError:
                       pass
                   try:
-                      agent.state['endogenous']['GDP'] += self.GDP_contrib[industry]
+                      agent.state['endogenous']['GDP'] += self.GDP_contrib[agent_name][industry]
                   except KeyError:
                       pass
           # Industry depreciate over time.
