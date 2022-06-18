@@ -12,6 +12,18 @@ import random
 import matplotlib.pyplot as plt
 import pickle
 
+PROVINCES = ["GuangDong", "HeBei", "XinJiang"]
+INDUSTRIES = ['Agriculture', 'Energy', 'Finance', 'IT', 'Minerals', 'Tourism']
+
+def all_ones(x):
+    return [1 for _ in x]
+
+def empty_dicts(x):
+    return [{} for _ in x]
+
+def industry_weights(industries, weights):
+    return dict(zip(industries, weights))
+
 env_config = {
     'scenario_name': 'layout/MacroEcon',
     #to be contnued after layout construction on foundation/scenarios/MacroEcon.
@@ -37,16 +49,29 @@ env_config = {
     ],
 
     # Industries available in this world.
+    # Help to define upper limit fo industries development,
     'industries': {'Agriculture': 2000, 'Energy': 2000, 'Finance': 2000, \
-                               'IT': 2000, 'Minerals': 2000, 'Tourism': 2000}, #Help to define actions of localGov
+                               'IT': 2000, 'Minerals': 2000, 'Tourism': 2000}, 
 
     # (optional) kwargs of the chosen scenario class
     'starting_agent_resources': {"Food": 10., "Energy": 10.}, #food, energy
+    #'contribution': {"GDP": dict(zip(PROVINCES, dict(zip(INDUSTRIES, ALL_ONES)))),
+    #                 "CO2": dict(zip(PROVINCES, dict(zip(INDUSTRIES, ALL_ONES)))),
+    #                 "resource_points": dict(zip(PROVINCES, dict(zip(INDUSTRIES, ALL_ONES))))},
+    #'contribution': {"GDP": dict(zip(PROVINCES, empty_dicts(PROVINCES))),
+    #                 "CO2": dict(zip(PROVINCES, empty_dicts(PROVINCES))),
+    #                 "resource_points": dict(zip(PROVINCES, empty_dicts(PROVINCES)))},
+    'contribution': {"GDP": dict(zip(PROVINCES, [industry_weights(INDUSTRIES, all_ones(INDUSTRIES)) for prvn in PROVINCES])),
+                     "CO2": dict(zip(PROVINCES, [industry_weights(INDUSTRIES, all_ones(INDUSTRIES)) for prvn in PROVINCES])),
+                     "resource_points": dict(zip(PROVINCES, [industry_weights(INDUSTRIES, all_ones(INDUSTRIES)) for prvn in PROVINCES]))},
     'industry_depreciation': {"GuangDong": {'Agriculture': 1, 'Energy': 1, 'Finance': 1, 'IT': 1, 'Minerals': 1, 'Tourism': 1}, "HeBei": {'Agriculture': 1, 'Energy': 1, 'Finance': 1, 'IT': 1, 'Minerals': 1, 'Tourism': 1}, "XinJiang": {'Agriculture': 1, 'Energy': 1, 'Finance': 1, 'IT': 1, 'Minerals': 1, 'Tourism': 1}}, #Help to calculate rewards.
     'industry_init_dstr': {"GuangDong": {'Agriculture': 1, 'Energy': 1, 'Finance': 1, 'IT': 1, 'Minerals': 1, 'Tourism': 1}, "HeBei": {'Agriculture': 1, 'Energy': 1, 'Finance': 1, 'IT': 1, 'Minerals': 1, 'Tourism': 1}, "XinJiang": {'Agriculture': 1, 'Energy': 1, 'Finance': 1, 'IT': 1, 'Minerals': 1, 'Tourism': 1}}, #Help to calculate rewards.
     'industry_weights': {"GuangDong": {'Agriculture': 1., 'Energy': 1., 'Finance': 1., 'IT': 1., 'Minerals': 1., 'Tourism': 1.}, "HeBei": {'Agriculture': 1., 'Energy': 1., 'Finance': 1., 'IT': 1., 'Minerals': 1., 'Tourism': 1.}, "XinJiang": {'Agriculture': 1., 'Energy': 1., 'Finance': 1., 'IT': 1., 'Minerals': 1., 'Tourism': 1.}}, #Help to calculate rewards.
     'dense_log_frequency': 1
 }
+
+#for obj in env_config['contribution'].keys():
+#env_config['contribution'][obj]
 
 env = foundation.make_env_instance(**env_config)
 
