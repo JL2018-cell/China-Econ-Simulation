@@ -14,6 +14,18 @@ import numpy as np
 import random
 import matplotlib.pyplot as plt
 
+PROVINCES = ["GuangDong", "HeBei", "XinJiang"]
+INDUSTRIES = ['Agriculture', 'Energy', 'Finance', 'IT', 'Minerals', 'Tourism']
+
+def all_ones(x):
+    return [1 for _ in x]
+
+def empty_dicts(x):
+    return [{} for _ in x]
+
+def industry_weights(industries, weights):
+    return dict(zip(industries, weights))
+
 env_config = {
     "scenario_name": 'layout/MacroEcon',
 
@@ -31,15 +43,21 @@ env_config = {
     'buildUpLimit': {'Agriculture': 10, 'Energy': 10},
     # Industries available in this world. Their upper limit.
     'industries': {'Agriculture': 2000, 'Energy': 2000, 'Finance': 2000, \
-                   'IT': 2000, 'Minerals': 2000, 'Tourism': 2000}, #Help to define actions of localGov
+                   'IT': 2000, 'Minerals': 2000, 'Tourism': 2000},
     # (optional) kwargs of the chosen scenario class
     'starting_agent_resources': {"Food": 10., "Energy": 10.}, #food, energy
+    'contribution': {"GDP": dict(zip(PROVINCES, [industry_weights(INDUSTRIES, all_ones(INDUSTRIES)) for prvn in PROVINCES])),
+                     "CO2": dict(zip(PROVINCES, [industry_weights(INDUSTRIES, all_ones(INDUSTRIES)) for prvn in PROVINCES])),
+                     "resource_points": dict(zip(PROVINCES, [industry_weights(INDUSTRIES, all_ones(INDUSTRIES)) for prvn in PROVINCES]))},
+    'industry_depreciation': {"GuangDong": {'Agriculture': 1, 'Energy': 1, 'Finance': 1, 'IT': 1, 'Minerals': 1, 'Tourism': 1}, "HeBei": {'Agriculture': 1, 'Energy': 1, 'Finance': 1, 'IT': 1, 'Minerals': 1, 'Tourism': 1}, "XinJiang": {'Agriculture': 1, 'Energy': 1, 'Finance': 1, 'IT': 1, 'Minerals': 1, 'Tourism': 1}}, #Help to calculate rewards.
+    'industry_init_dstr': {"GuangDong": {'Agriculture': 1, 'Energy': 1, 'Finance': 1, 'IT': 1, 'Minerals': 1, 'Tourism': 1}, "HeBei": {'Agriculture': 1, 'Energy': 1, 'Finance': 1, 'IT': 1, 'Minerals': 1, 'Tourism': 1}, "XinJiang": {'Agriculture': 1, 'Energy': 1, 'Finance': 1, 'IT': 1, 'Minerals': 1, 'Tourism': 1}}, #Help to calculate rewards.
+    'industry_weights': {"GuangDong": {'Agriculture': 1., 'Energy': 1., 'Finance': 1., 'IT': 1., 'Minerals': 1., 'Tourism': 1.}, "HeBei": {'Agriculture': 1., 'Energy': 1., 'Finance': 1., 'IT': 1., 'Minerals': 1., 'Tourism': 1.}, "XinJiang": {'Agriculture': 1., 'Energy': 1., 'Finance': 1., 'IT': 1., 'Minerals': 1., 'Tourism': 1.}}, #Help to calculate rewards.
 
     # ===== STANDARD ARGUMENTS ======
     #to be contnued after layout construction on foundation/scenarios/MacroEcon.
     'world_size': [100, 100],
     'n_agents': 3,
-    'episode_length': 10, # Number of timesteps per episode
+    'episode_length': 2, # Number of timesteps per episode
     'multi_action_mode_agents': True,
     'multi_action_mode_planner': True,
     'allow_observation_scaling': False,
