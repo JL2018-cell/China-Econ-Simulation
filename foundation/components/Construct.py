@@ -13,12 +13,11 @@ class Construct(BaseComponent):
 
     name = "Construct"
     component_type = "Construct"
-    required_entities = ['Agriculture', 'Energy', 'Finance', 'IT', 'Minerals', 'Tourism']
     agent_subclasses = ["localGov"]
 
-
-    def __init__(self, *base_component_args, payment=10, \
+    def __init__(self, industries = [], *base_component_args, payment=10, \
                  punishment = 0, num_ep_to_recover = 1, **base_component_kwargs):
+        self.required_entities = industries
         super().__init__(*base_component_args, **base_component_kwargs)
         self.payment = payment
         self.num_ep_to_recover = num_ep_to_recover
@@ -49,6 +48,8 @@ class Construct(BaseComponent):
                             new_weight = agent.industry_weights[target_industry] - self.punishment
                             if new_weight > 0:
                                 agent.industry_weights[target_industry] = new_weight
+                            else:
+                                agent.industry_weights[target_industry] = 0.
                     elif "build_" in action:
                         target_industry = action.split("_")[-1]
                         # After building industry, resultant resource point allocated on it should not > preference i.e. upper limit.
