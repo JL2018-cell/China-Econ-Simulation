@@ -183,6 +183,7 @@ class BaseEnvironment(ABC):
         agent_locs=None,
         world_size=None,
         buildUpLimit = 10,
+        industries = [],
         industry_weights = {},
         industry_init_dstr = {},
         episode_length=1000,
@@ -238,6 +239,9 @@ class BaseEnvironment(ABC):
 
         # Upper limit of industries that localGov can build per timestep.
         self.industry_weights = industry_weights
+
+        # Industries available in this world.
+        self.industries = industries
 
         # Foundation assumes there's only a single planner
         n_planners = 1
@@ -325,7 +329,7 @@ class BaseEnvironment(ABC):
             else:
                 raise TypeError
             component_cls = component_registry.get(component_name)
-            self._register_entities(component_cls.required_entities)
+            #self._register_entities(component_cls.required_entities)
             component_classes.append([component_cls, component_config])
 
         # Initialize the world object (contains agents and world map),
@@ -346,11 +350,13 @@ class BaseEnvironment(ABC):
         # Initialize the component objects.
         for component_cls, component_kwargs in component_classes:
             component_object = component_cls(
+                self.industries,
                 self.world,
                 self._episode_length,
                 inventory_scale=self.inv_scale,
-                **component_kwargs
+                **component_kwargs,
             )
+            self._register_entities(component_object.required_entities)
             self._components.append(component_object)
             self._components_dict[component_object.name] = component_object
             self._shorthand_lookup[component_object.shorthand] = component_object
