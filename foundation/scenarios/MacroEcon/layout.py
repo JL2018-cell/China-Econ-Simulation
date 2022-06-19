@@ -15,10 +15,11 @@ class MacroEconLayout(BaseEnvironment):
   """
   
   agent_subclasses = ["LocalGov", "CentralGov"]
-  required_industries = ['Agriculture', 'Energy', 'Finance', 'IT', 'Minerals', 'Tourism']
-  required_entities = required_industries
+  # required_industries = ['Agriculture', 'Energy', 'Finance', 'IT', 'Minerals', 'Tourism']
+  # required_entities = required_industries
 
   def __init__(self, starting_agent_resources, contribution, industries, industry_depreciation, **kwargs):
+      self.required_entities = list(industries.keys())
       # Depreciation of industry in each time step.
       # Format: {"agent 1": {industry 1: int}, "agent 2": ...}
       self.industry_depreciation = industry_depreciation
@@ -37,6 +38,7 @@ class MacroEconLayout(BaseEnvironment):
       self.energy = starting_agent_resources["Energy"]
       self.resource_points = 100.
       #assert self.starting_agent_coin >= 0.0
+      kwargs = {**kwargs, **{"industries": self.required_entities}}
       super().__init__(**kwargs)
       for industry, upperLimits in industries.items():
           if isinstance(upperLimits, list): #Each region has its own upper limit of building industries.
