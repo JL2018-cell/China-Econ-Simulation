@@ -14,8 +14,8 @@ import numpy as np
 import random
 import matplotlib.pyplot as plt
 
-PROVINCES = ["GuangDong", "HeBei", "XinJiang"]
-INDUSTRIES = ['Agriculture', 'Energy', 'Finance', 'IT', 'Minerals', 'Tourism']
+PROVINCES = ["GuangDong", "HeBei", "XinJiang", "AnHui", "ZheJiang", "SiChuan", "FuJian", "HuBei", "JiangSu", "ShanDong", "HuNan", "HeNan", "ShanXi"]
+INDUSTRIES = ['Agriculture', 'Energy', 'Finance', 'IT', 'Minerals', 'Tourism', 'Manufacturing', 'Construction', 'Transport', 'Retail', 'Education']
 
 def all_ones(x):
     return [1 for _ in x]
@@ -42,16 +42,15 @@ env_config = {
     # Resource points that each agents van get in each time step.
     'buildUpLimit': {'Agriculture': 10, 'Energy': 10},
     # Industries available in this world. Their upper limit.
-    'industries': {'Agriculture': 2000, 'Energy': 2000, 'Finance': 2000, \
-                   'IT': 2000, 'Minerals': 2000, 'Tourism': 2000},
+    'industries': {industry: 2000 for industry in INDUSTRIES},
     # (optional) kwargs of the chosen scenario class
     'starting_agent_resources': {"Food": 10., "Energy": 10.}, #food, energy
     'contribution': {"GDP": dict(zip(PROVINCES, [industry_weights(INDUSTRIES, all_ones(INDUSTRIES)) for prvn in PROVINCES])),
                      "CO2": dict(zip(PROVINCES, [industry_weights(INDUSTRIES, all_ones(INDUSTRIES)) for prvn in PROVINCES])),
                      "resource_points": dict(zip(PROVINCES, [industry_weights(INDUSTRIES, all_ones(INDUSTRIES)) for prvn in PROVINCES]))},
-    'industry_depreciation': {"GuangDong": {'Agriculture': 1, 'Energy': 1, 'Finance': 1, 'IT': 1, 'Minerals': 1, 'Tourism': 1}, "HeBei": {'Agriculture': 1, 'Energy': 1, 'Finance': 1, 'IT': 1, 'Minerals': 1, 'Tourism': 1}, "XinJiang": {'Agriculture': 1, 'Energy': 1, 'Finance': 1, 'IT': 1, 'Minerals': 1, 'Tourism': 1}}, #Help to calculate rewards.
-    'industry_init_dstr': {"GuangDong": {'Agriculture': 1, 'Energy': 1, 'Finance': 1, 'IT': 1, 'Minerals': 1, 'Tourism': 1}, "HeBei": {'Agriculture': 1, 'Energy': 1, 'Finance': 1, 'IT': 1, 'Minerals': 1, 'Tourism': 1}, "XinJiang": {'Agriculture': 1, 'Energy': 1, 'Finance': 1, 'IT': 1, 'Minerals': 1, 'Tourism': 1}}, #Help to calculate rewards.
-    'industry_weights': {"GuangDong": {'Agriculture': 1., 'Energy': 1., 'Finance': 1., 'IT': 1., 'Minerals': 1., 'Tourism': 1.}, "HeBei": {'Agriculture': 1., 'Energy': 1., 'Finance': 1., 'IT': 1., 'Minerals': 1., 'Tourism': 1.}, "XinJiang": {'Agriculture': 1., 'Energy': 1., 'Finance': 1., 'IT': 1., 'Minerals': 1., 'Tourism': 1.}}, #Help to calculate rewards.
+    'industry_depreciation': dict(zip(PROVINCES, [industry_weights(INDUSTRIES, all_ones(INDUSTRIES)) for prvn in PROVINCES])),
+    'industry_weights': dict(zip(PROVINCES, [industry_weights(INDUSTRIES, all_ones(INDUSTRIES)) for prvn in PROVINCES])),
+    'industry_init_dstr': dict(zip(PROVINCES, [industry_weights(INDUSTRIES, all_ones(INDUSTRIES)) for prvn in PROVINCES])),
 
     # ===== STANDARD ARGUMENTS ======
     #to be contnued after layout construction on foundation/scenarios/MacroEcon.
