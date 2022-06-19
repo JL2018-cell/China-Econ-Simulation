@@ -36,11 +36,11 @@ class ContinuousDoubleAuction(BaseComponent):
 
     name = "ContinuousDoubleAuction"
     component_type = "Trade"
-    required_entities = ["Agriculture", "Minerals", "Energy", "Tourism", "IT", "Finance"]
     agent_subclasses = ["localGov"]
 
     def __init__(
         self,
+        industries = [],
         *args,
         max_bid_ask=10,
         order_labor=0.25,
@@ -48,6 +48,7 @@ class ContinuousDoubleAuction(BaseComponent):
         max_num_orders=None,
         **kwargs
     ):
+        self.required_entities = industries
         super().__init__(*args, **kwargs)
 
         # The max amount (in coin) that an agent can bid/ask for 1 unit of a commodity
