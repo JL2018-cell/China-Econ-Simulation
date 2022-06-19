@@ -98,19 +98,44 @@ class Finance(Resource):
     collectible = True
 
 
-#@resource_registry.add
-#class Stone(Resource):
-#    """Stone resource. collectible."""
-#
-#    name = "Stone"
-#    color = np.array([241, 233, 219]) / 255.0
-#    collectible = True
+@resource_registry.add
+class Manufacturing(Resource):
+    """Minerals industry"""
+
+    name = "Manufacturing"
+    color = np.array([107, 143, 113]) / 255.0
+    collectible = True
+
+@resource_registry.add
+class Construction(Resource):
+    """Minerals industry"""
+
+    name = "Construction"
+    color = np.array([107, 143, 113]) / 255.0
+    collectible = True
+
+@resource_registry.add
+class Transport(Resource):
+    """Minerals industry"""
+
+    name = "Transport"
+    color = np.array([107, 143, 113]) / 255.0
+    collectible = True
+
+@resource_registry.add
+class Retail(Resource):
+    """Minerals industry"""
+
+    name = "Retail"
+    color = np.array([107, 143, 113]) / 255.0
+    collectible = True
 
 
-#@resource_registry.add
-#class Coin(Resource):
-#    """Coin resource. Included in all environments by default. Not collectible."""
-#
-#    name = "Coin"
-#    color = np.array([229, 211, 82]) / 255.0
-#    collectible = False
+@resource_registry.add
+class Education(Resource):
+    """Minerals industry"""
+
+    name = "Education"
+    color = np.array([107, 143, 113]) / 255.0
+    collectible = True
+
