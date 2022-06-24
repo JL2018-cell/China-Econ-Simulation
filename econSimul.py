@@ -1,3 +1,4 @@
+from obtain_data import obtain_data
 from foundation.entities.resources import Resource, resource_registry
 from foundation.base.base_component import BaseComponent, component_registry
 from foundation.base.base_env import BaseEnvironment, scenario_registry
@@ -12,6 +13,7 @@ import random
 import matplotlib.pyplot as plt
 import pickle
 
+DATA_PATH = "./data"
 PROVINCES = ["GuangDong", "HeBei", "XinJiang", "AnHui", "ZheJiang", "SiChuan", "FuJian", "HuBei", "JiangSu", "ShanDong", "HuNan", "HeNan", "ShanXi"]
 INDUSTRIES = ['Agriculture', 'Energy', 'Finance', 'IT', 'Minerals', 'Tourism', 'Manufacturing', 'Construction', 'Transport', 'Retail', 'Education']
 
@@ -24,13 +26,15 @@ def empty_dicts(x):
 def industry_weights(industries, weights):
     return dict(zip(industries, weights))
 
+industry_init_dstr, contribution = obtain_data(DATA_PATH)
+
 env_config = {
     'scenario_name': 'layout/MacroEcon',
     #to be contnued after layout construction on foundation/scenarios/MacroEcon.
     'world_size': [100, 100],
-    'n_agents': 3,
-    'agent_names': ["GuangDong", "HeBei", "XinJiang"],
-    'agent_locs': [(80, 10), (50, 50), (10, 60)],
+    'n_agents': len(PROVINCES),
+    'agent_names': PROVINCES,
+    'agent_locs': [(i, i) for i in range(len(PROVINCES))],
     'multi_action_mode_agents': True,
     'allow_observation_scaling': False,
     # Upper limit of industries that localGov can build per timestep.
@@ -58,12 +62,10 @@ env_config = {
     #'contribution': {"GDP": dict(zip(PROVINCES, empty_dicts(PROVINCES))),
     #                 "CO2": dict(zip(PROVINCES, empty_dicts(PROVINCES))),
     #                 "resource_points": dict(zip(PROVINCES, empty_dicts(PROVINCES)))},
-    'contribution': {"GDP": dict(zip(PROVINCES, [industry_weights(INDUSTRIES, all_ones(INDUSTRIES)) for prvn in PROVINCES])),
-                     "CO2": dict(zip(PROVINCES, [industry_weights(INDUSTRIES, all_ones(INDUSTRIES)) for prvn in PROVINCES])),
-                     "resource_points": dict(zip(PROVINCES, [industry_weights(INDUSTRIES, all_ones(INDUSTRIES)) for prvn in PROVINCES]))},
+    'contribution': contribution,
     'industry_depreciation': dict(zip(PROVINCES, [industry_weights(INDUSTRIES, all_ones(INDUSTRIES)) for prvn in PROVINCES])),
     'industry_weights': dict(zip(PROVINCES, [industry_weights(INDUSTRIES, all_ones(INDUSTRIES)) for prvn in PROVINCES])),
-    'industry_init_dstr': dict(zip(PROVINCES, [industry_weights(INDUSTRIES, all_ones(INDUSTRIES)) for prvn in PROVINCES])),
+    'industry_init_dstr': industry_init_dstr,
     'dense_log_frequency': 1
 }
 
