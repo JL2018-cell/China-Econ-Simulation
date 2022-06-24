@@ -67,13 +67,13 @@ class MacroEconLayout(BaseEnvironment):
       #Observe agents
       for agent in self.world.agents:
           obs[str(agent.idx)] = {}
-          obs[str(agent.idx)]['actions'] = {k: np.array(v) for k, v in agent.action.items()}
-          obs[str(agent.idx)]['industries'] = {k: np.array(v) for k, v in agent.state['inventory'].items()}
-          obs[str(agent.idx)]['endogenous'] = {k: np.array(v) for k, v in agent.state['endogenous'].items()}
+          obs[str(agent.idx)]['actions'] = {k: np.array(int(v)) for k, v in agent.action.items()}
+          obs[str(agent.idx)]['industries'] = {k: np.array(int(v)) for k, v in agent.state['inventory'].items()}
+          obs[str(agent.idx)]['endogenous'] = {k: np.array(int(v)) for k, v in agent.state['endogenous'].items()}
       #Observe planner
       obs[self.world.planner.idx] = {}
-      obs[self.world.planner.idx]['actions'] = {k: np.array(v) for k, v in self.world.planner.action.items()}
-      obs[self.world.planner.idx]['storage'] = {k: np.array([v]) for k, v in self.world.planner.inventory.items()}
+      obs[self.world.planner.idx]['actions'] = {k: np.array(int(v)) for k, v in self.world.planner.action.items()}
+      obs[self.world.planner.idx]['storage'] = {k: np.array([int(v)]) for k, v in self.world.planner.inventory.items()}
       return obs
 
   def reset_agent_states(self):
