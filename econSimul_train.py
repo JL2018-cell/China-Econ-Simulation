@@ -1,3 +1,4 @@
+from obtain_data import obtain_data
 import ray
 from ray.rllib.agents.ppo import PPOTrainer
 from foundation.entities.resources import Resource, resource_registry
@@ -14,6 +15,7 @@ import numpy as np
 import random
 import matplotlib.pyplot as plt
 
+DATA_PATH = "./data"
 PROVINCES = ["GuangDong", "HeBei", "XinJiang", "AnHui", "ZheJiang", "SiChuan", "FuJian", "HuBei", "JiangSu", "ShanDong", "HuNan", "HeNan", "ShanXi"]
 INDUSTRIES = ['Agriculture', 'Energy', 'Finance', 'IT', 'Minerals', 'Tourism', 'Manufacturing', 'Construction', 'Transport', 'Retail', 'Education']
 
@@ -26,6 +28,8 @@ def empty_dicts(x):
 def industry_weights(industries, weights):
     return dict(zip(industries, weights))
 
+industry_init_dstr, contribution = obtain_data(DATA_PATH)
+
 env_config = {
     "scenario_name": 'layout/MacroEcon',
 
@@ -37,25 +41,23 @@ env_config = {
     ],
 
     # ===== SCENARIO CLASS ARGUMENTS =====
-    'agent_names': ["GuangDong", "HeBei", "XinJiang"],
-    'agent_locs': [(80, 10), (50, 50), (10, 60)],
+    'agent_names': PROVINCES,
+    'agent_locs': [(i, i) for i in range(len(PROVINCES))],
     # Resource points that each agents van get in each time step.
     'buildUpLimit': {'Agriculture': 10, 'Energy': 10},
     # Industries available in this world. Their upper limit.
     'industries': {industry: 2000 for industry in INDUSTRIES},
     # (optional) kwargs of the chosen scenario class
     'starting_agent_resources': {"Food": 10., "Energy": 10.}, #food, energy
-    'contribution': {"GDP": dict(zip(PROVINCES, [industry_weights(INDUSTRIES, all_ones(INDUSTRIES)) for prvn in PROVINCES])),
-                     "CO2": dict(zip(PROVINCES, [industry_weights(INDUSTRIES, all_ones(INDUSTRIES)) for prvn in PROVINCES])),
-                     "resource_points": dict(zip(PROVINCES, [industry_weights(INDUSTRIES, all_ones(INDUSTRIES)) for prvn in PROVINCES]))},
+    'contribution': contribution,
     'industry_depreciation': dict(zip(PROVINCES, [industry_weights(INDUSTRIES, all_ones(INDUSTRIES)) for prvn in PROVINCES])),
     'industry_weights': dict(zip(PROVINCES, [industry_weights(INDUSTRIES, all_ones(INDUSTRIES)) for prvn in PROVINCES])),
-    'industry_init_dstr': dict(zip(PROVINCES, [industry_weights(INDUSTRIES, all_ones(INDUSTRIES)) for prvn in PROVINCES])),
+    'industry_init_dstr': industry_init_dstr,
 
     # ===== STANDARD ARGUMENTS ======
     #to be contnued after layout construction on foundation/scenarios/MacroEcon.
     'world_size': [100, 100],
-    'n_agents': 3,
+    'n_agents': len(PROVINCES),
     'episode_length': 2, # Number of timesteps per episode
     'multi_action_mode_agents': True,
     'multi_action_mode_planner': True,
