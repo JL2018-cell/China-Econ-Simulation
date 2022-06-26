@@ -1,294 +1,296 @@
+"""
+Grid-World Markov Decision Processes (MDPs).
+
+The MDPs in this module are actually not complete MDPs, but rather the
+sub-part of an MDP containing states, actions, and transitions (including
+their probabilistic character). Reward-function and terminal-states are
+supplied separately.
+
+Some general remarks:
+    - Edges act as barriers, i.e. if an agent takes an action that would cross
+    an edge, the state will not change.
+
+    - Actions are not restricted to specific states. Any action can be taken
+    in any state and have a unique inteded outcome. The result of an action
+    can be stochastic, but there is always exactly one that can be described
+    as the intended result of the action.
+"""
+
 import numpy as np
 import math
-import pandas as pd
-import matplotlib.pyplot as plt
-from mpl_toolkits.axes_grid1 import make_axes_locatable
-from itertools import product               # Cartesian product for iterators
-
-# allow us to re-use the framework from the src directory
-import sys, os
-sys.path.append(os.path.abspath(os.path.join('../src/irl_maxent')))
-
-import gridworld as W                       # basic grid-world MDPs
-import trajectory as T                      # trajectory generation
-import optimizer as O                       # stochastic gradient descent optimizer
-import solver as S                          # MDP solver (value-iteration)
-import plot as P                            # helper-functions for plotting
-
-PROVINCES = ["GuangDong", "HeBei", "XinJiang"]
-
-def setup_mdp(max_scale):
-    # create our world
-    world = W.GridWorld(max_scale)
-
-    # set up the reward function
-    CO2 = {'Agriculture': 2000, 'Energy': 2000, 'Finance': 2000, \
-           'IT': 2000, 'Minerals': 2000, 'Tourism': 2000}
-    GDP = {'Agriculture': 2000, 'Energy': 2000, 'Finance': 2000, \
-           'IT': 2000, 'Minerals': 2000, 'Tourism': 2000}
-    reward = lambda s: np.dot(np.array(GDP.values()), s) - np.dot(np.array(CO2.values()), s)
-
-    # No terminal state
-    terminal = []
-
-    return world, reward, terminal
-
-
-# generate some "expert" trajectories from data.
-def generate_expert_trajectories(reduce_scale):
-    gdp = pd.read_excel('Data.xlsx', sheet_name = 0, header = 0, index_col = 0)
-    gdp = gdp.fillna(0)
-    #gdp = gdp.apply(lambda x: x/reduce_scale)
-    #gdp = gdp.round(decimals = 0)
-    #gdp = gdp.astype('int32')
-    pollutant = pd.read_excel('Data.xlsx', sheet_name = 1, header = 0, index_col = 0)
-    pollutant = pollutant.fillna(0)
-    #pollutant = pollutant.apply(lambda x: x/reduce_scale)
-    #pollutant = pollutant.round(decimals = 0)
-    #pollutant = pollutant.astype('int32')
-    industry = pd.read_excel('Data.xlsx', sheet_name = 2, header = 0, index_col = 0)
-    industry = industry.fillna(0)
-    #industry = industry.apply(lambda x: x/reduce_scale)
-    #industry = industry.round(decimals = 0)
-    #industry = industry.astype('int32')
-
-    tjs = {}
-    max = 0
-
-    # format:
-    # {province name: array([[state 1], [state 2], [state 3], ... [final state]])}
-    # 1 trajectory for each province
-    for prvn in PROVINCES:
-        tjs[prvn] = []
-        hist = industry.loc[[idx for idx in industry.index if prvn in idx]].T.to_numpy()
-        hist = hist // reduce_scale + (hist % reduce_scale > (reduce_scale/2))
-        hist = hist.astype('int32')
-        print("Max:", hist.max())
-        max = hist.max() if hist.max() > max else max
-        for i in range(hist.shape[0] - 1):
-           # [(state, action, next_state)]
-           tjs[prvn].append((hist[i], hist[i + 1] - hist[i], hist[i + 1]))
-        tjs[prvn] = [T.Trajectory(tjs[prvn])]
-
-    policy = []
-    return tjs, max
-
-
-# Given {"a": 2, "b": 3} and both upper limit = 5, then return [1, 1, 0, 0, 0] + [1, 1, 1, 0, 0]
-def state_to_state_vector(industries, state):
-    state_vector = np.array([np.concatenate((np.ones(state[i]), np.zeros(v - state[i])), axis = 0) \
-                                for i, v in enumerate(industries.values())]).flatten()
-    return state_vector
-
-# normalize values in dictionary
-def normalize_dict(d):
-    vs = np.array([v for v in d.values()])
-    return dict(zip(d.keys(), vs / vs.sum()))
-
-
-def state_to_int(ls, n = 0):
-    if len(ls) == 0:
-        return 0
-    elif len(ls) == 1:
-        return int(ls[0] * 10**n)
-    else:
-        return int(ls[-1] * 10**n + state_to_int(ls[0:-1], n + 1))
-# == The Actual Algorithm ==
-
-def feature_expectation_from_trajectories(features, trajectories):
-    n_states, n_features = features.shape
-
-    fe = np.zeros(n_features)
-
-    for t in trajectories:                  # for each trajectory
-        for s in t.states():                # for each state in trajectory
-            _s = state_to_int(s) % n_features
-
-            fe += features[_s, :]            # sum-up features
-
-    return fe / len(trajectories)           # average over trajectories
-
-def initial_probabilities_from_trajectories(n_states, trajectories):
-    p = np.zeros(n_states)
-
-    for t in trajectories:                  # for each trajectory
-        p[t.transitions()[0][0]] += 1.0     # increment starting state
-
-    return p / len(trajectories)            # normalize
-
-
-def compute_expected_svf(p_transition, p_initial, terminal, reward, eps=1e-5):
-    n_states, _, n_actions = p_transition.shape
-    nonterminal = set(range(n_states)) - set(terminal)  # nonterminal states
-    
-    # Backward Pass
-    # 1. initialize at terminal states
-    zs = np.zeros(n_states)                             # zs: state partition function
-    zs[terminal] = 1.0
-
-    # 2. perform backward pass
-    for _ in range(2 * n_states):                       # longest trajectory: n_states
-        # reset action values to zero
-        za = np.zeros((n_states, n_actions))            # za: action partition function
-
-        # for each state-action pair
-        # for s_from, a in product(range(n_states), range(n_actions)):
-        for s_from, a in product(world.state_features(world.industries), world.all_actions()):
-
-            # sum over s_to
-            for s_to in world.state_features(world.industries):
-                _s_from = state_to_int(s_from) % min(za.shape[0], len(reward))
-                _a = state_to_int(a) % za.shape[1]
-                _s_to = state_to_int(s_to) % min(za.shape[0], len(reward))
-                za[_s_from, _a] += p_transition.transition_func(s_from, s_to, a) * np.exp(reward[_s_from]) * zs[_s_to]
-        
-        # sum over all actions
-        zs = za.sum(axis=1)
-
-    # 3. compute local action probabilities
-    p_action = za / zs[:, None]
-
-    # Forward Pass
-    # 4. initialize with starting probability
-    d = np.zeros((n_states, 2 * n_states))              # d: state-visitation frequencies
-    d[:, 0] = p_initial
-
-    # 5. iterate for N steps
-    for t in range(1, 2 * n_states):                    # longest trajectory: n_states
-        
-        # for all states
-        for s_to in range(n_states):
-            
-            # sum over nonterminal state-action pairs
-            for s_from, a in product(nonterminal, range(n_actions)):
-                d[s_to, t] += d[s_from, t-1] * p_action[s_from, a] * p_transition[s_from, s_to, a]
-
-    # 6. sum-up frequencies
-    return d.sum(axis=1)
-
-def maxent_irl(p_transition, features, terminal, trajectories, optim, init, eps=1):
-    n_states, _, n_actions = p_transition.shape
-    _, n_features = features.shape
-
-    # compute feature expectation from trajectories
-    e_features = feature_expectation_from_trajectories(features, trajectories)
-    
-    # compute starting-state probabilities from trajectories
-    p_initial = initial_probabilities_from_trajectories(n_states, trajectories)
-
-    # gradient descent optimization
-    omega = init(n_features)        # initialize our parameters
-    delta = np.inf                  # initialize delta for convergence check
-
-    counter = 0
-
-    optim.reset(omega)              # re-start optimizer
-    while delta > eps:              # iterate until convergence
-
-        omega_old = omega.copy()
-
-        # compute per-state reward from features
-        reward = features.dot(omega)
-
-        # compute gradient of the log-likelihood
-        e_svf = compute_expected_svf(p_transition, p_initial, terminal, reward)
-        grad = e_features - features.T.dot(e_svf)
-
-        # perform optimization step and compute delta for convergence
-        optim.step(grad)
-        
-        # re-compute detla for convergence check
-        delta = np.max(np.abs(omega_old - omega))
-        print("counter", counter, "delta =", delta)
-
-    # re-compute per-state reward and return
-    return features.dot(omega)
-
-# == The Main Program ==
-
-reduce_scale = 50 # 1/10 of original data magnitude.
-
-print("Read trajectories.")
-
-# generate some "expert" trajectories (and its policy for visualization)
-trajectories, max_scale = generate_expert_trajectories(reduce_scale)
-
-print("Set up gridworld.")
-
-# set-up the GridWorld Markov Decision Process
-world, reward, terminal = setup_mdp(max_scale)
-
-print("Set up features.")
-
-# set up features: we use one feature vector per state
-features = world.state_features(world.industries)
-
-print("Choose parameters.")
-
-# choose our parameter initialization strategy:
-#   initialize parameters with constant
-init = O.Constant(1.0)
-
-print("Optimizing...")
-
-# choose our optimization strategy:
-#   we select exponentiated stochastic gradient descent with linear learning-rate decay
-optim = O.ExpSga(lr=O.linear_decay(lr0=0.2))
-
-print("RL learning...")
-
-# actually do some inverse reinforcement learning
-reward_maxent = {}
-for prvn in PROVINCES:
-    reward_maxent[prvn] = maxent_irl(world.p_transition, features, terminal, trajectories[prvn], optim, init)
-
-print("Done!")
-
-
-"""
-fig = plt.figure()
-ax = fig.add_subplot(121)
-ax.title.set_text('Original Reward')
-divider = make_axes_locatable(ax)
-cax = divider.append_axes('right', size='5%', pad=0.05)
-p = P.plot_state_values(ax, world, reward, **style)
-P.plot_deterministic_policy(ax, world, S.optimal_policy(world, reward, 0.8), color='red')
-fig.colorbar(p, cax=cax)
-
-ax = fig.add_subplot(122)
-ax.title.set_text('Recovered Reward')
-divider = make_axes_locatable(ax)
-cax = divider.append_axes('right', size='5%', pad=0.05)
-p = P.plot_state_values(ax, world, reward_maxent, **style)
-P.plot_deterministic_policy(ax, world, S.optimal_policy(world, reward_maxent, 0.8), color='red')
-fig.colorbar(p, cax=cax)
-
-fig.tight_layout()
-#plt.show()
-plt.savefig('plot2.png', dpi=250)
-
-# Note: this code will only work with one feature per state
-p_initial = initial_probabilities_from_trajectories(world.n_states, trajectories)
-e_svf = compute_expected_svf(world.p_transition, p_initial, terminal, reward_maxent)
-e_features = feature_expectation_from_trajectories(features, trajectories)
-
-fig = plt.figure()
-ax = fig.add_subplot(121)
-ax.title.set_text('Trajectory Feature Expectation')
-divider = make_axes_locatable(ax)
-cax = divider.append_axes('right', size='5%', pad=0.05)
-p = P.plot_state_values(ax, world, e_features, **style)
-fig.colorbar(p, cax=cax)
-
-ax = fig.add_subplot(122)
-ax.title.set_text('MaxEnt Feature Expectation')
-divider = make_axes_locatable(ax)
-cax = divider.append_axes('right', size='5%', pad=0.05)
-p = P.plot_state_values(ax, world, features.T.dot(e_svf), **style)
-fig.colorbar(p, cax=cax)
-
-fig.tight_layout()
-#plt.show()
-plt.savefig('plot3.png', dpi=250)
-
-"""
+from itertools import product
+import threading
+
+class p_transition:
+    def __init__(self, shape, table):
+        self.shape = shape
+        # Probability Function
+        self.table = table 
+    def p_trans(self, s1, s2, a):
+        return self.table(s1, s2, a)
+
+class GridWorld:
+    """
+    Basic deterministic grid world MDP.
+
+    The attribute size specifies both widht and height of the world, so a
+    world will have size**2 states.
+
+    Args:
+        size: The width and height of the world as integer.
+
+    Attributes:
+        n_states: The number of states of this MDP.
+        n_actions: The number of actions of this MDP.
+        p_transition: The transition probabilities as table. The entry
+            `p_transition[from, to, a]` contains the probability of
+            transitioning from state `from` to state `to` via action `a`.
+        size: The width and height of the world.
+        actions: The actions of this world as paris, indicating the
+            direction in terms of coordinates.
+    """
+
+    def __init__(self, dim, size):
+        self.size = size
+        self.dimension = dim
+
+        # self.actions = [tuple(int(math.copysign(1, i)) if i == j else 0 for i in range(-dim, dim)) for j in range(-dim, dim)]
+        self.actions = [tuple(1 if i == j else 0 for i in range(dim)) for j in range(dim)] + [tuple(-1 if i == j else 0 for i in range(dim)) for j in range(dim)] + [tuple(0 for _ in range(dim))]
+
+        # Assume dimension number = dim, each dimension has grid size = size.
+        self.n_states = size**dim
+        self.n_actions = len(self.actions)
+
+        self.p_transition = p_transition(shape=(self.n_states, self.n_states, self.n_actions), table = self._transition_prob)
+        #self._transition_prob_table()
+
+    def state_index_to_point(self, state):
+        """
+        Convert a state index to the coordinate representing it.
+
+        Args:
+            state: Integer representing the state.
+
+        Returns:
+            The coordinate as tuple of integers representing the same state
+            as the index.
+        """
+        point = []
+        for d in range(self.dimension):
+            point.append(state % (self.size**d))
+        #while state >= self.size:
+        #    point.append(state % self.size)
+        #    state = state // self.size
+        point.reverse()
+        return tuple(point)
+
+    def state_point_to_index(self, state):
+        """
+        Convert a state coordinate to the index representing it.
+
+        Note:
+            Does not check if coordinates lie outside of the world.
+
+        Args:
+            state: Tuple of integers representing the state.
+
+        Returns:
+            The index as integer representing the same state as the given
+            coordinate.
+        """
+        state = list(state)
+        state.reverse()
+        index = 0
+        for i, x in enumerate(state):
+            index += x * self.size**i
+        return index
+
+    def state_point_to_index_clipped(self, state):
+        """
+        Convert a state coordinate to the index representing it, while also
+        handling coordinates that would lie outside of this world.
+
+        Coordinates that are outside of the world will be clipped to the
+        world, i.e. projected onto to the nearest coordinate that lies
+        inside this world.
+
+        Useful for handling transitions that could go over an edge.
+
+        Args:
+            state: The tuple of integers representing the state.
+
+        Returns:
+            The index as integer representing the same state as the given
+            coordinate if the coordinate lies inside this world, or the
+            index to the closest state that lies inside the world.
+        """
+        s = (max(0, min(self.size - 1, state[0])), max(0, min(self.size - 1, state[1])))
+        return self.state_point_to_index(s)
+
+    def state_index_transition(self, s, a):
+        """
+        Perform action `a` at state `s` and return the intended next state.
+
+        Does not take into account the transition probabilities. Instead it
+        just returns the intended outcome of the given action taken at the
+        given state, i.e. the outcome in case the action succeeds.
+
+        Args:
+            s: The state at which the action should be taken.
+            a: The action that should be taken.
+
+        Returns:
+            The next state as implied by the given action and state.
+        """
+        s = self.state_index_to_point(s)
+        s = s[0] + self.actions[a][0], s[1] + self.actions[a][1]
+        return self.state_point_to_index_clipped(s)
+
+    def _transition_prob_table(self):
+        """
+        Builds the internal probability transition table.
+
+        Returns:
+            The probability transition table of the form
+
+                [state_from, state_to, action]
+
+            containing all transition probabilities. The individual
+            transition probabilities are defined by `self._transition_prob'.
+        """
+        table = np.zeros(shape=(self.n_states, self.n_states, self.n_actions))
+
+        return table
+
+    def _transition_prob(self, s_from, s_to, a):
+        """
+        Compute the transition probability for a single transition.
+
+        Args:
+            s_from: The state in which the transition originates.
+            s_to: The target-state of the transition.
+            a: The action via which the target state should be reached.
+
+        Returns:
+            The transition probability from `s_from` to `s_to` when taking
+            action `a`.
+        """
+        fx, fy = self.state_index_to_point(s_from)
+        tx, ty = self.state_index_to_point(s_to)
+        ax, ay = self.actions[a]
+
+        # deterministic transition defined by action
+        if fx + ax == tx and fy + ay == ty:
+            return 1.0
+
+        # we can stay at the same state if we would move over an edge
+        if fx == tx and fy == ty:
+            if not 0 <= fx + ax < self.size or not 0 <= fy + ay < self.size:
+                return 1.0
+
+        # otherwise this transition is impossible
+        return 0.0
+
+    def __repr__(self):
+        return "GridWorld(size={})".format(self.size)
+
+
+class IcyGridWorld(GridWorld):
+    """
+    Grid world MDP similar to Frozen Lake, just without the holes in the ice.
+
+    In this worlds, agents will slip with a specified probability, causing
+    the agent to end up in a random neighboring state instead of the one
+    implied by the chosen action.
+
+    Args:
+        size: The width and height of the world as integer.
+        p_slip: The probability of a slip.
+
+    Attributes:
+        p_slip: The probability of a slip.
+
+    See `class GridWorld` for more information.
+    """
+
+    def __init__(self, industry_dstr, buildUpLimit, industries_limit, resourcePt_contribution, dim, size, p_slip=0.2):
+        self.p_slip = p_slip
+        self.industry_dstr = industry_dstr
+        self.buildUpLimit = buildUpLimit
+        self.industries_limit = industries_limit
+        self.resource_points = 10
+        self.resourcePt_contribution = resourcePt_contribution
+
+        super().__init__(dim, size)
+
+    def _transition_prob(self, s_from, s_to, a):
+        """
+        Compute the transition probability for a single transition.
+
+        Args:
+            s_from: The state in which the transition originates.
+            s_to: The target-state of the transition.
+            a: The action via which the target state should be reached.
+
+        Returns:
+            The transition probability from `s_from` to `s_to` when taking
+            action `a`.
+        """
+        frm = self.state_index_to_point(s_from)
+        to = self.state_index_to_point(s_to)
+        action = self.actions[a]
+
+        step = np.array(to) - np.array(frm)
+        #print("_transition_prob", a)
+        if np.array_equal(step, np.array(action)):
+            if step[0] <= self.buildUpLimit['Agriculture'] \
+              and step[1] <= self.buildUpLimit['Energy'] \
+              and step[2:].sum() <= self.resource_points:
+                return 1 / self.n_actions
+        else:
+            return 0.
+
+    def __repr__(self):
+        return "IcyGridWorld(size={}, p_slip={})".format(self.size, self.p_slip)
+
+
+def state_features(world):
+    """
+    Return the feature matrix assigning each state with an individual
+    feature (i.e. an identity matrix of size n_states * n_states).
+
+    Rows represent individual states, columns the feature entries.
+
+    Args:
+        world: A GridWorld instance for which the feature-matrix should be
+            computed.
+
+    Returns:
+        The coordinate-feature-matrix for the specified world.
+    """
+    return np.identity(world.n_states)
+
+
+def coordinate_features(world):
+    """
+    Symmetric features assigning each state a vector where the respective
+    coordinate indices are nonzero (i.e. a matrix of size n_states *
+    world_size).
+
+    Rows represent individual states, columns the feature entries.
+
+    Args:
+        world: A GridWorld instance for which the feature-matrix should be
+            computed.
+
+    Returns:
+        The coordinate-feature-matrix for the specified world.
+    """
+    features = np.zeros((world.n_states, world.size))
+
+    for s in range(world.n_states):
+        x, y = world.state_index_to_point(s)
+        features[s, x] += 1
+        features[s, y] += 1
+
+    return features
