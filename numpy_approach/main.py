@@ -29,7 +29,7 @@ industries_limit = {industry: 2000 for industry in INDUSTRIES}
 
 def setup_mdp(industry_dstr, buildUpLimit, industries_limit, resourcePt_contribution):
     # create our world
-    world = W.IcyGridWorld(industry_dstr, buildUpLimit, industries_limit, resourcePt_contribution, dim = len(INDUSTRIES), size = 2, p_slip = 0.)
+    world = W.IcyGridWorld(industry_dstr, buildUpLimit, industries_limit, resourcePt_contribution, dim = 11, size = 2, p_slip = 0.)
 
     # set up the reward function
     reward = np.zeros(world.n_states)
@@ -43,11 +43,9 @@ def setup_mdp(industry_dstr, buildUpLimit, industries_limit, resourcePt_contribu
 
 # set-up the GridWorld Markov Decision Process
 # world, reward, terminal = setup_mdp(industry_init_dstr[province], buildUpLimit, industries_limit, contribution["resource_points"][province])
-
-# Reduce number of industry, For testing only.
-#industry_init_dstr[province] = dict([(k, v) for i, (k, v) in enumerate(industry_init_dstr[province].items()) if i < 4])
-#industries_limit = dict([(k, v) for i, (k, v) in enumerate(industries_limit.items()) if i < 4])
-#contribution["resource_points"][province] = dict([(k, v) for i, (k, v) in enumerate(contribution["resource_points"][province].items()) if i < 4])
+industry_init_dstr[province] = dict([(k, v) for i, (k, v) in enumerate(industry_init_dstr[province].items()) if i < 4])
+industries_limit = dict([(k, v) for i, (k, v) in enumerate(industries_limit.items()) if i < 4])
+contribution["resource_points"][province] = dict([(k, v) for i, (k, v) in enumerate(contribution["resource_points"][province].items()) if i < 4])
 
 world, reward, terminal = setup_mdp(industry_init_dstr[province], buildUpLimit, industries_limit, contribution["resource_points"][province])
 
@@ -113,7 +111,7 @@ def compute_expected_svf(p_transition, p_initial, terminal, reward, eps=1e-5):
     zs = np.zeros(n_states)                             # zs: state partition function
     zs[terminal] = 1.0
 
-    k = 23
+    k = 3
     # 2. perform backward pass
     # longest trajectory: n_states
     for _ in random.sample(range(2 * n_states), k = k):
@@ -193,7 +191,7 @@ def maxent_irl(p_transition, features, terminal, trajectories, optim, init, eps=
         grad = e_features - features.T.dot(e_svf)
 
         # perform optimization step and compute delta for convergence
-        optim.step(-grad)
+        optim.step(grad)
         
         # re-compute detla for convergence check
         delta = np.max(np.abs(omega_old - omega))
