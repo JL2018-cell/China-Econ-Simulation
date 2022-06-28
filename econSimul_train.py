@@ -237,7 +237,7 @@ def generate_rollout_from_current_trainer_policy(
 dense_logs = generate_rollout_from_current_trainer_policy(
     trainer,
     env_obj,
-    num_dense_logs=2
+    num_dense_logs=10
 )
 
 with open('dense_logs2.pkl', 'wb') as f:
@@ -245,9 +245,9 @@ with open('dense_logs2.pkl', 'wb') as f:
 print("Save dense_logs2 in dense_logs.pkl")
 
 
-from utils import plotting  # plotting utilities for visualizing env. state
-
-plotting.plotting(dense_logs)
+# plotting utilities for visualizing env. state
+#from utils import plotting  
+#plotting.plotting(dense_logs)
 
 # Shutdown Ray after use
 ray.shutdown()
