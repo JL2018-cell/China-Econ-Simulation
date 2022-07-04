@@ -1018,7 +1018,7 @@ class BaseEnvironment(ABC):
             )
             self._dense_log["actions"].append(
                 {
-                    str(agent.idx): {k: v for k, v in agent.action.items() if v > 0}
+                    str(agent.idx): {k: v for k, v in agent.action.items()}
                     for agent in self.all_agents
                 }
             )
