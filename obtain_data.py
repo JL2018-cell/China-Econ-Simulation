@@ -1,12 +1,14 @@
 # Read data to provide parameters for model.
+#Read data intil 2015.
 import pandas as pd
 import numpy as np
 import os
 from sklearn.linear_model import LinearRegression
 
-def obtain_data(data_path):
+def obtain_data(data_path, time_low_bound = None, time_up_bound = None):
     # FInd path of data
     print("In obtain_data")
+
     root, directory, files = list(os.walk(data_path))[0]
     # Define names of agents.
     INDUSTRIES_CHIN = ["农林牧渔业", "电力、热力、燃气及水生产和供应业", "金融业", "信息传输、软件和信息技术服务业",  "采矿业", "住宿和餐饮业", "制造业", "建筑业", "交通运输、仓储和邮政业", "批发和零售业", "教育业"]
@@ -20,6 +22,10 @@ def obtain_data(data_path):
     industry_init_dstr = {}
     # Change of industry distribution over time.
     industry_dstr = {}
+    # Change of GDP over time.
+    GDP_series = {}
+    # Change of CO2 over time.
+    CO2_series = {}
 
     # Find relationship between variable of interest and industries labour distribution 
     def regression(X, y):
@@ -39,6 +45,12 @@ def obtain_data(data_path):
     labour_files = [file for file in files if "labour" in file.lower()]
     for labour_file in labour_files:
         data = pd.read_excel(root + r"/" + labour_file, header = 3, index_col = 0)
+        if time_up_bound is not None and time_low_bound is not None:
+            data = data[[col for col in data.columns if col < time_up_bound and (col > time_low_bound or col == time_low_bound)]]
+        elif time_up_bound is None and time_low_bound is not None:
+            data = data[[col for col in data.columns if col > time_low_bound or col == time_low_bound]]
+        elif time_up_bound is not None and time_low_bound is None:
+            data = data[[col for col in data.columns if col < time_up_bound]]
         [category, province] = labour_file[:labour_file.find(".")].split("_")
         target_indices = [index for index in data.index if any(industry in index for industry in INDUSTRIES_CHIN)]
         # Ensure arrangement of indices is the same as global variable INDUSTRIES_CHIN.
@@ -49,9 +61,19 @@ def obtain_data(data_path):
     
     for file in files:
         data = pd.read_excel(root + r"/" + file, header = 3, index_col = 0)
+        if time_up_bound is not None and time_low_bound is not None:
+            data = data[[col for col in data.columns if col < time_up_bound and (col > time_low_bound or col == time_low_bound)]]
+        elif time_up_bound is None and time_low_bound is not None:
+            data = data[[col for col in data.columns if col > time_low_bound or col == time_low_bound]]
+        elif time_up_bound is not None and time_low_bound is None:
+            data = data[[col for col in data.columns if col < time_up_bound]]
         [category, province] = file[:file.find(".")].split("_")
         if category.lower() == "sewage":
             y = data.fillna(0).sum()
+            try:
+                CO2_series[province] += y
+            except KeyError:
+                CO2_series[province] = y
             X = industry_dstr[province]
             X = X.join(y.rename("Sewage"), how = "inner")
             indices = [[col for col in X.columns if industry in col][0] for industry in INDUSTRIES_CHIN]
@@ -68,6 +90,10 @@ def obtain_data(data_path):
 
         elif category.lower() == "air":
             y = data.fillna(0).sum()
+            try:
+                CO2_series[province] += y
+            except KeyError:
+                CO2_series[province] = y
             X = industry_dstr[province]
             X = X.join(y.rename("Air"), how = "inner")
             indices = [[col for col in X.columns if industry in col][0] for industry in INDUSTRIES_CHIN]
@@ -84,6 +110,7 @@ def obtain_data(data_path):
                     contribution["CO2"][province][k] = v
         elif category.lower() == "gdp":
             y = data.loc[[index for index in data.index if "地区生产总值" in index][0]]
+            GDP_series[province] = y
             X = industry_dstr[province]
             X = X.join(y.rename("GDP"), how = "inner")
             X = X[[[col for col in X.columns if industry in col][0] for industry in INDUSTRIES_CHIN] + ["GDP"]]
@@ -100,10 +127,10 @@ def obtain_data(data_path):
                 X = X.join(y.rename("resource_points"), how = "inner")
                 coeff = regression(X.to_numpy()[:, 0 : X.shape[1] - 1], X.to_numpy()[:, -1])
                 contribution["resource_points"][PROVINCES[index]] = dict(zip(INDUSTRIES, coeff))
-    return (industry_init_dstr, contribution) 
+    return (CO2_series, GDP_series, industry_dstr, industry_init_dstr, contribution) 
 
 
-def industry_dstr_over_time(data_path):
+def industry_dstr_over_time(data_path, time_low_bound = None, time_up_bound = None):
     # FInd path of data
     root, directory, files = list(os.walk(data_path))[0]
     # Define names of agents.
@@ -129,6 +156,12 @@ def industry_dstr_over_time(data_path):
     labour_files = [file for file in files if "labour" in file.lower()]
     for labour_file in labour_files:
         data = pd.read_excel(root + r"/" + labour_file, header = 3, index_col = 0)
+        if time_up_bound is not None and time_low_bound is not None:
+            data = data[[col for col in data.columns if col < time_up_bound and (col > time_low_bound or col == time_low_bound)]]
+        elif time_up_bound is None and time_low_bound is not None:
+            data = data[[col for col in data.columns if col > time_low_bound or col == time_low_bound]]
+        elif time_up_bound is not None and time_low_bound is None:
+            data = data[[col for col in data.columns if col < time_up_bound]]
         print(labour_file, data.shape)
         [category, province] = labour_file[:labour_file.find(".")].split("_")
         target_indices = [index for index in data.index if any(industry in index for industry in INDUSTRIES_CHIN)]
@@ -137,3 +170,10 @@ def industry_dstr_over_time(data_path):
         state = data.loc[target_indices].fillna(method ='backfill', axis = 1)
         industry_dstr[province] = state.dropna(axis = 1, how = 'all').T
     return industry_dstr
+
+#x = industry_dstr_over_time("./data")
+#print(x)
+#x, y = obtain_data("./data")
+#print(x)
+#print()
+#print(y)
