@@ -30,7 +30,6 @@ class Construct(BaseComponent):
         # Apply any building actions taken by the mobile agents
         for agent in world.get_random_order_agents():
             for action, magnitude in agent.action.items():
-                print("Agent", agent.idx, ":", action, "-", magnitude)
                 if "Construct" in action:
                     if "break_" in action:
                         target_industry = action.split("_")[-1]
