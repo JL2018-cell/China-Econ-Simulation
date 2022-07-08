@@ -498,7 +498,6 @@ class ContinuousDoubleAuction(BaseComponent):
                 resource_action = agent.get_component_action(
                     self.name, "Buy_{}".format(resource)
                 )
-                print("Agent", agent.idx, "auction bid:", resource_action)
 
                 # No-op
                 if resource_action == 0:
@@ -516,7 +515,6 @@ class ContinuousDoubleAuction(BaseComponent):
                 resource_action = agent.get_component_action(
                     self.name, "Sell_{}".format(resource)
                 )
-                print("Agent", agent.idx, "auction ask:", resource_action)
 
                 # No-op
                 if resource_action == 0:
