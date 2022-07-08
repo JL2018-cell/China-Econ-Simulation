@@ -112,7 +112,7 @@ class MacroEconLayout(BaseEnvironment):
               weights = np.array(list(agent.industry_weights.values()) + [1. for i in agent.state['endogenous'].keys()])
               rewards[agent.idx] = np.dot(np.array(list(agent.state['inventory'].values()) + list(agent.state['endogenous'].values())), weights)
           rewards[self.world.planner.idx] = self.total_GDP - self.total_CO2
-          print("In layout, rewards:", rewards)
+          #print("In layout, rewards:", rewards)
           return rewards
 
   def generate_observations(self):
