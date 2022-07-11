@@ -23,7 +23,7 @@ class MacroEconLayout(BaseEnvironment):
   # required_industries = ['Agriculture', 'Energy', 'Finance', 'IT', 'Minerals', 'Tourism']
   # required_entities = required_industries
 
-  def __init__(self, starting_agent_resources, contribution, industries, industries_chin, industry_depreciation, irl, irl_data_path, **kwargs):
+  def __init__(self, starting_agent_resources, contribution, industries, industries_chin, industry_depreciation, irl, irl_data_path, contribution_chg_rate, **kwargs):
       self.required_entities = list(industries.keys())
       # Depreciation of industry in each time step.
       # Format: {"agent 1": {industry 1: int}, "agent 2": ...}
@@ -38,9 +38,11 @@ class MacroEconLayout(BaseEnvironment):
       self.pt_per_day = 100
       self.toCarbonEffcy = 0.5
       self.toGDPEffcy = 0.5
-      self.resourcePt_contrib = contribution["resource_points"]
-      self.GDP_contrib = contribution["GDP"]
-      self.CO2_contrib = contribution["CO2"]
+      self.contribution_chg_rate = contribution_chg_rate
+      self.contribution = contribution
+      #self.resourcePt_contrib = contribution["resource_points"]
+      #self.GDP_contrib = contribution["GDP"]
+      #self.CO2_contrib = contribution["CO2"]
       self.agric = starting_agent_resources["Food"]
       self.energy = starting_agent_resources["Energy"]
       self.resource_points = 100.
@@ -90,6 +92,7 @@ class MacroEconLayout(BaseEnvironment):
       return index
 
   def compute_reward(self):
+      # Use result of IRL.
       if self.irl:
           rewards = {}
           for agent in self.world.agents:
@@ -106,11 +109,11 @@ class MacroEconLayout(BaseEnvironment):
                   tmp = tmp // 2
           rewards[self.world.planner.idx] = self.total_GDP - self.total_CO2
           return rewards
+      # Use self-defined reward function.
       else:
           rewards = {}
           for agent in self.world.agents:
-              weights = np.array(list(agent.industry_weights.values()) + [1. for i in agent.state['endogenous'].keys()])
-              rewards[agent.idx] = np.dot(np.array(list(agent.state['inventory'].values()) + list(agent.state['endogenous'].values())), weights)
+              rewards[agent.idx] = sum(agent.industry_weights.values()) * agent.state['endogenous']['GDP'] - agent.state['endogenous']['CO2']
           rewards[self.world.planner.idx] = self.total_GDP - self.total_CO2
           #print("In layout, rewards:", rewards)
           return rewards
@@ -120,6 +123,8 @@ class MacroEconLayout(BaseEnvironment):
       obs = {}
       #Observe agents
       for agent in self.world.agents:
+          if agent.resource_points < 0:
+              print("Agent", agent.idx, "resource_points < 0")
           obs[str(agent.idx)] = {}
           obs[str(agent.idx)]['actions'] = {k: np.array(int(v)) for k, v in agent.action.items()}
           obs[str(agent.idx)]['industries'] = {k: np.array(int(v)) for k, v in agent.state['inventory'].items()}
@@ -138,24 +143,34 @@ class MacroEconLayout(BaseEnvironment):
       self.agric = 100.
       self.energy = 100.
 
+  def linear_exp(self, x):
+      if x > 0:
+          return x
+      else:
+          return np.exp(x)
+
   def scenario_step(self):
       for agent in self.world.agents:
           agent_name = agent.state["name"]
           idx = agent.idx
           # Agriculture and energy industry produce resource points to build other industries
-          agent.resource_points += sum(self.resourcePt_contrib[agent_name].values())
+          self.world.agents[idx].resource_points += self.linear_exp(sum(self.contribution["resource_points"][agent_name].values()))
           # Calculate cumulative CO2, GDP produced by each industry in each agent.
           for k, v in agent.action.items():
+              this_CO2 = 0
+              this_GDP = 0
               if v > 0:
                   industry = k.split("_")[-1]
                   try:
-                      self.world.agents[idx].state['endogenous']['CO2'] += self.CO2_contrib[agent_name][industry]
+                      this_CO2 += self.contribution["CO2"][agent_name][industry]
                   except KeyError:
                       pass
                   try:
-                      self.world.agents[idx].state['endogenous']['GDP'] += self.GDP_contrib[agent_name][industry]
+                      this_GDP += self.contribution["GDP"][agent_name][industry]
                   except KeyError:
                       pass
+          self.world.agents[idx].state['endogenous']['CO2'] += self.linear_exp(this_CO2 + self.contribution["CO2"][agent_name]["bias"])
+          self.world.agents[idx].state['endogenous']['GDP'] += self.linear_exp(this_GDP + self.contribution["GDP"][agent_name]["bias"])
           # Industry depreciate over time.
           for industry in agent.state['inventory'].keys():
               if agent.state["inventory"][industry] - self.industry_depreciation[agent.state["name"]][industry] > 0:
@@ -163,28 +178,16 @@ class MacroEconLayout(BaseEnvironment):
               else:
                   self.world.agents[idx].state['inventory'][industry] = 0
 
-          #agent.state['inventory'] = {k: agent.state["inventory"][k] - v 
-          #                            for k, v in self.industry_depreciation[agent.state["name"]].items()
-          #                            if agent.state["inventory"][k] - v > 0 else k: 0}
       self.total_CO2 = sum([agent.state['endogenous']['CO2'] for agent in self.world.agents])
       self.total_GDP = sum([agent.state['endogenous']['GDP'] for agent in self.world.agents])
       self.agric += 1.
       self.energy += 1.
 
+      # Update contribution of industries to CO2, GDP, resource points over time.
+      for metrics, provinces in self.contribution.items():
+          for province, attrs in provinces.items():
+              for k, v in attrs.items():
+                  growth = self.contribution_chg_rate[metrics][province][k][0]
+                  sd = self.contribution_chg_rate[metrics][province][k][1]
+                  self.contribution[metrics][province][k] *= np.random.normal(growth, sd)
 
-  """
-  @property
-  def observe(self):
-    return []
-  
-  def reset_scenario(self):
-    self.agric = 100.
-    self.energy = 100.
-  
-  def next_step(self):
-    self.agric += 1
-    self.energy += 1
-    
-  def get_rewards(self):
-    return 0
-  """
