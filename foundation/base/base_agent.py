@@ -315,14 +315,18 @@ class BaseAgent:
         transferred = 0
         for name in resources_names:
             if name == 'resource_points':
+                tmp = float(np.minimum(self.resource_points, amount))
                 transferred += float(np.minimum(self.resource_points, amount))
                 amount -= np.minimum(self.resource_points, amount)
-                self.resource_points -= transferred
+                self.resource_points -= tmp
             else:
+                tmp = float(np.minimum(self.buildUpLimit[name], amount))
                 transferred += float(np.minimum(self.buildUpLimit[name], amount))
                 amount -= np.minimum(self.buildUpLimit[name], amount)
-                self.buildUpLimit[name] -= transferred
+                self.buildUpLimit[name] -= tmp
             self.state["escrow"][name] += transferred
+            if self.resource_points < 0:
+                print("resource_point < 0")
             if amount <= 0:
                 break
         #transferred += float(np.minimum(self.state["inventory"][resource], amount))
@@ -347,10 +351,15 @@ class BaseAgent:
                     transferred = np.minimum(self.state["escrow"][resource], amount)
         """
         assert amount >= 0
-        transferred = float(np.minimum(self.state["escrow"][resource], amount))
-        self.state["escrow"][resource] -= transferred
-        self.state["inventory"][resource] += transferred
-        return float(transferred)
+        # industry resources
+        if resource in self.state["escrow"].keys():
+            self.buildUpLimit[resource] += amount
+            self.state["escrow"][resource] -= amount
+        # buildUpLimit - Agriculture, Energy
+        else:
+            self.state["inventory"][resource] += amount
+            self.state["escrow"]["resource_points"] -= amount
+        return amount
 
     def total_endowment(self, resource):
         """Get the combined inventory+escrow endowment of resource.
