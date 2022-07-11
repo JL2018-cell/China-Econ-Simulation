@@ -402,9 +402,16 @@ class ContinuousDoubleAuction(BaseComponent):
                     bids_.append(bid)
                 # Otherwise, remove it and do the associated bookkeeping
                 else:
+                    r = random.randint(1, 3)
+                    if r == 1:
+                        resource = "Agriculture"
+                    elif r == 2:
+                        resource = "Energy"
+                    else:
+                        resource = random.choice(list(world.agents[bid["buyer"]].state["inventory"].keys()))
                     # Return the set aside money to the buyer
                     amount = world.agents[bid["buyer"]].escrow_to_inventory(
-                        "Coin", bid["bid"]
+                        resource, bid["bid"]
                     )
                     assert amount == bid["bid"]
                     # Adjust the bid histogram to reflect the removal of the bid
