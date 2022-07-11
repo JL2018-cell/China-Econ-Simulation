@@ -29,8 +29,13 @@ def obtain_data(data_path, time_low_bound = None, time_up_bound = None):
 
     # Find relationship between variable of interest and industries labour distribution 
     def regression(X, y):
-        model = LinearRegression().fit(X, y)
-        return model.coef_
+        snd_min = np.sort(y)[1]
+        if np.min(y) == 0:
+            y = np.clip(y, snd_min / 10000, None)
+        else:
+            y = np.clip(y, snd_min / 10000, None)
+        model = LinearRegression().fit(X, np.apply_along_axis(np.log, 0, y))
+        return model.intercept_, model.coef_
 
     def align(arr, target_arr):
         assert len(arr) == len(target_arr)
@@ -79,10 +84,11 @@ def obtain_data(data_path, time_low_bound = None, time_up_bound = None):
             indices = [[col for col in X.columns if industry in col][0] for industry in INDUSTRIES_CHIN]
             indices = align(indices, INDUSTRIES_CHIN)
             X = X[indices + ["Sewage"]]
-            coeff = regression(X.to_numpy()[:, 0 : X.shape[1] - 1], X.to_numpy()[:, -1])
+            bias, coeff = regression(X.to_numpy()[:, 0 : X.shape[1] - 1], X.to_numpy()[:, -1])
             # contribution["sewage"][province] = dict(zip(INDUSTRIES, coeff))
             contribution["CO2"][province] = {}
-            for k, v in dict(zip(INDUSTRIES, coeff)).items():
+            industries_contrib = {**dict(zip(INDUSTRIES, coeff)), **{"bias": bias}}
+            for k, v in industries_contrib.items():
                 try:
                     contribution["CO2"][province][k] += v
                 except KeyError:
@@ -100,10 +106,11 @@ def obtain_data(data_path, time_low_bound = None, time_up_bound = None):
             indices = align(indices, INDUSTRIES_CHIN)
             X = X[indices + ["Air"]]
             #X = X[[[col for col in X.columns if industry in col][0] for industry in INDUSTRIES_CHIN] + ["Air"]]
-            coeff = regression(X.to_numpy()[:, 0 : X.shape[1] - 1], X.to_numpy()[:, -1])
+            bias, coeff = regression(X.to_numpy()[:, 0 : X.shape[1] - 1], X.to_numpy()[:, -1])
             # contribution["air"][province] = dict(zip(INDUSTRIES, coeff))
             contribution["CO2"][province] = {}
-            for k, v in dict(zip(INDUSTRIES, coeff)).items():
+            industries_contrib = {**dict(zip(INDUSTRIES, coeff)), **{"bias": bias}}
+            for k, v in industries_contrib.items():
                 try:
                     contribution["CO2"][province][k] += v
                 except KeyError:
@@ -114,8 +121,8 @@ def obtain_data(data_path, time_low_bound = None, time_up_bound = None):
             X = industry_dstr[province]
             X = X.join(y.rename("GDP"), how = "inner")
             X = X[[[col for col in X.columns if industry in col][0] for industry in INDUSTRIES_CHIN] + ["GDP"]]
-            coeff = regression(X.to_numpy()[:, 0 : X.shape[1] - 1], X.to_numpy()[:, -1])
-            contribution["GDP"][province] = dict(zip(INDUSTRIES, coeff))
+            bias, coeff = regression(X.to_numpy()[:, 0 : X.shape[1] - 1], X.to_numpy()[:, -1])
+            contribution["GDP"][province] = {**dict(zip(INDUSTRIES, coeff)), **{"bias": bias}}
         elif category.lower() == "labour":
             pass
         else: #Tax_income, deleted "budgeted income" at the first row of raw data.
@@ -125,8 +132,8 @@ def obtain_data(data_path, time_low_bound = None, time_up_bound = None):
                 X = industry_dstr[PROVINCES[index]]
                 y = data_in_simul.loc[index]
                 X = X.join(y.rename("resource_points"), how = "inner")
-                coeff = regression(X.to_numpy()[:, 0 : X.shape[1] - 1], X.to_numpy()[:, -1])
-                contribution["resource_points"][PROVINCES[index]] = dict(zip(INDUSTRIES, coeff))
+                bias, coeff = regression(X.to_numpy()[:, 0 : X.shape[1] - 1], X.to_numpy()[:, -1])
+                contribution["resource_points"][PROVINCES[index]] = {**dict(zip(INDUSTRIES, coeff)), **{"bias": bias}}
     return (CO2_series, GDP_series, industry_dstr, industry_init_dstr, contribution) 
 
 
@@ -171,9 +178,3 @@ def industry_dstr_over_time(data_path, time_low_bound = None, time_up_bound = No
         industry_dstr[province] = state.dropna(axis = 1, how = 'all').T
     return industry_dstr
 
-#x = industry_dstr_over_time("./data")
-#print(x)
-#x, y = obtain_data("./data")
-#print(x)
-#print()
-#print(y)
