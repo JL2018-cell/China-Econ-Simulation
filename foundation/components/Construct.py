@@ -37,43 +37,43 @@ class Construct(BaseComponent):
                         if agent.state['inventory'][target_industry] - magnitude > 0:
                             # target_industry is Agriculture or Energy Industry.
                             if target_industry in self.required_entities[0:2]:
-                                    agent.state['inventory'][target_industry] -= magnitude
-                                    agent.buildUpLimit[target_industry] += magnitude
+                                    self.world.agents[agent.idx].state['inventory'][target_industry] -= magnitude
+                                    self.world.agents[agent.idx].buildUpLimit[target_industry] += magnitude
                             else:
-                                    agent.state['inventory'][target_industry] -= magnitude
-                                    agent.resource_points += magnitude
+                                    self.world.agents[agent.idx].state['inventory'][target_industry] -= magnitude
+                                    self.world.agents[agent.idx].resource_points += magnitude
                         else:
                             #Incorporate punishment of agent acts outside limit.
-                            new_weight = agent.industry_weights[target_industry] - self.punishment
+                            new_weight = self.world.agents[agent.idx].industry_weights[target_industry] - self.punishment
                             if new_weight > 0:
-                                agent.industry_weights[target_industry] = new_weight
+                                self.world.agents[agent.idx].industry_weights[target_industry] = new_weight
                             else:
-                                agent.industry_weights[target_industry] = 0.
+                                self.world.agents[agent.idx].industry_weights[target_industry] = 0.
                     elif "build_" in action:
                         target_industry = action.split("_")[-1]
                         # After building industry, resultant resource point allocated on it should not > preference i.e. upper limit.
                         if agent.state['inventory'][target_industry] + magnitude <= agent.preference[target_industry]:
                             # target_industry is Agriculture or Energy Industry.
                             if target_industry in self.required_entities[0:2]:
-                                    agent.state['inventory'][target_industry] += magnitude
-                                    agent.buildUpLimit[target_industry] -= magnitude
-                            else:
-                                    agent.state['inventory'][target_industry] += magnitude
-                                    agent.resource_points -= magnitude
+                                self.world.agents[agent.idx].state['inventory'][target_industry] += magnitude
+                                self.world.agents[agent.idx].buildUpLimit[target_industry] -= magnitude
+                            elif agent.resource_points >= magnitude:
+                                self.world.agents[agent.idx].state['inventory'][target_industry] += magnitude
+                                self.world.agents[agent.idx].resource_points -= magnitude
                         else:
                             #Incorporate punishment of agent acts outside limit.
-                            new_weight = agent.industry_weights[target_industry] - self.punishment
+                            new_weight = self.world.agents[agent.idx].industry_weights[target_industry] - self.punishment
                             if new_weight > 0:
-                                agent.industry_weights[target_industry] = new_weight
+                                self.world.agents[agent.idx].industry_weights[target_industry] = new_weight
 
             # In the next timestep, agent gets resources to build Agriculture and Energy industry.
             for industry in agent.buildUpLimit.keys():
-                agent.buildUpLimit[industry] += agent.buildUpIncrm[industry]
+                self.world.agents[agent.idx].buildUpLimit[industry] += agent.buildUpIncrm[industry]
 
             #Each agent has a prefernce list to construct or vreak industry.
         for agent in self.world.agents:
-            agent.state["resource_points"] = agent.resource_points
-            agent.state["buildUpLimit"] = agent.buildUpLimit
+            self.world.agents[agent.idx].state["resource_points"] = agent.resource_points
+            self.world.agents[agent.idx].state["buildUpLimit"] = agent.buildUpLimit
             """
             action list:
             ['Construct.build_Agriculture', 'Construct.break_Agriculture', 
