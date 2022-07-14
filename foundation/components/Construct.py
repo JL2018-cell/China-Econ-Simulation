@@ -16,12 +16,34 @@ class Construct(BaseComponent):
     agent_subclasses = ["localGov"]
 
     def __init__(self, industries = [], *base_component_args, payment=10, \
-                 punishment = 0, num_ep_to_recover = 1, **base_component_kwargs):
+                 punishment = 0, num_ep_to_recover = 1, contribution, **base_component_kwargs):
         self.required_entities = industries
+        self.contribution = contribution
         super().__init__(*base_component_args, **base_component_kwargs)
         self.payment = payment
         self.num_ep_to_recover = num_ep_to_recover
         self.punishment = punishment
+
+    def linear_exp(self, x):
+        if x > 0:
+            return x
+        else:
+            return np.exp(x)
+
+    def non_negv_log(self, x):
+        if x > 1:
+            return np.log(x)
+        else:
+            return 0
+
+    def shock(self, x):
+        if x < 10:
+            return np.random.randint(5, 10 + 1)
+        else:
+            try:
+                return np.random.randint(int(x**0.5), int(x))
+            except ValueError:
+                return np.random.randint(int(x**0.5) // 2, int(x**0.5))
 
     def component_step(self):
         world = self.world
@@ -37,11 +59,12 @@ class Construct(BaseComponent):
                         if agent.state['inventory'][target_industry] - magnitude > 0:
                             # target_industry is Agriculture or Energy Industry.
                             if target_industry in self.required_entities[0:2]:
-                                    self.world.agents[agent.idx].state['inventory'][target_industry] -= magnitude
-                                    self.world.agents[agent.idx].buildUpLimit[target_industry] += magnitude
+                                self.world.agents[agent.idx].state['inventory'][target_industry] -= magnitude
+                                self.world.agents[agent.idx].buildUpLimit[target_industry] += magnitude
+                            # target_industry is other industries.
                             else:
-                                    self.world.agents[agent.idx].state['inventory'][target_industry] -= magnitude
-                                    self.world.agents[agent.idx].resource_points += magnitude
+                                self.world.agents[agent.idx].state['inventory'][target_industry] -= magnitude
+                                self.world.agents[agent.idx].resource_points += magnitude
                         else:
                             #Incorporate punishment of agent acts outside limit.
                             new_weight = self.world.agents[agent.idx].industry_weights[target_industry] - self.punishment
@@ -49,6 +72,7 @@ class Construct(BaseComponent):
                                 self.world.agents[agent.idx].industry_weights[target_industry] = new_weight
                             else:
                                 self.world.agents[agent.idx].industry_weights[target_industry] = 0.
+                        #self.world.agents[agent.idx].state['endogenous']['CO2'] += self.linear_exp(self.contribution["CO2"][agent.state['name']]["Construction"] + self.contribution["CO2"][agent.state['name']]["bias"])
                     elif "build_" in action:
                         target_industry = action.split("_")[-1]
                         # After building industry, resultant resource point allocated on it should not > preference i.e. upper limit.
@@ -65,6 +89,8 @@ class Construct(BaseComponent):
                             new_weight = self.world.agents[agent.idx].industry_weights[target_industry] - self.punishment
                             if new_weight > 0:
                                 self.world.agents[agent.idx].industry_weights[target_industry] = new_weight
+                        #self.world.agents[agent.idx].state['endogenous']['GDP'] += self.linear_exp(self.contribution["GDP"][agent.state['name']]["Construction"] + self.contribution["GDP"][agent.state['name']]["bias"])
+                        #self.world.agents[agent.idx].state['endogenous']['CO2'] += self.linear_exp(self.contribution["CO2"][agent.state['name']]["Construction"] + self.contribution["CO2"][agent.state['name']]["bias"])
 
             # In the next timestep, agent gets resources to build Agriculture and Energy industry.
             for industry in agent.buildUpLimit.keys():
@@ -155,16 +181,13 @@ class Construct(BaseComponent):
             #return [(entity, 2) for entity in self.required_entities]
             actions = []
             for c in self.required_entities:
-                actions.append(("build_{}".format(c), 20))
-                actions.append(("break_{}".format(c), 20))
+                actions.append(("build_{}".format(c), 2000))
+                actions.append(("break_{}".format(c), 2000))
             return actions
         if agent_cls_name == "centralGov":
             charges = []
             for c in self.required_entities:
-                charges.append(("charge_{}".format(c), 20))
-                charges.append(("release_{}".format(c), 20))
+                charges.append(("charge_{}".format(c), 2000))
+                charges.append(("release_{}".format(c), 2000))
             return charges
         return None
-
-
-
