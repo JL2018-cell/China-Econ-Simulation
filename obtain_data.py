@@ -74,7 +74,8 @@ def obtain_data(data_path, time_low_bound = None, time_up_bound = None):
             data = data[[col for col in data.columns if col < time_up_bound]]
         [category, province] = file[:file.find(".")].split("_")
         if category.lower() == "sewage":
-            y = data.fillna(0).sum()
+            #y = data.fillna(0).sum()
+            y = data.fillna(method = 'bfill', axis = 1).fillna(method = 'ffill', axis = 1).fillna(0).sum()
             try:
                 CO2_series[province] += y
             except KeyError:
@@ -95,7 +96,8 @@ def obtain_data(data_path, time_low_bound = None, time_up_bound = None):
                     contribution["CO2"][province][k] = v
 
         elif category.lower() == "air":
-            y = data.fillna(0).sum()
+            y = data.fillna(method = 'bfill', axis = 1).fillna(method = 'ffill', axis = 1).fillna(0).sum()
+            #y = data.fillna(0).sum()
             try:
                 CO2_series[province] += y
             except KeyError:
@@ -177,4 +179,3 @@ def industry_dstr_over_time(data_path, time_low_bound = None, time_up_bound = No
         state = data.loc[target_indices].fillna(method ='backfill', axis = 1)
         industry_dstr[province] = state.dropna(axis = 1, how = 'all').T
     return industry_dstr
-
