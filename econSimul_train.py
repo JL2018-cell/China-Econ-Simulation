@@ -116,18 +116,18 @@ for metrics, provinces in contribution.items():
         contribution_chg_rate[metrics][province] = {}
         for k, v in attrs.items():
             if metrics == "CO2":
-                contribution_chg_rate[metrics][province][k] = [0.9, 0.5]
+                contribution_chg_rate[metrics][province][k] = [0.9, 0.3]
             elif metrics == "resource_points":
-                contribution_chg_rate[metrics][province][k] = [0.8, 0.5]
+                contribution_chg_rate[metrics][province][k] = [1, 0.7]
             else: # GDP
-                contribution_chg_rate[metrics][province][k] = [0.5, 0.5]
+                contribution_chg_rate[metrics][province][k] = [1, 0.7]
 
 env_config = {
     "scenario_name": 'layout/MacroEcon',
 
     'components': [
         #Build industries
-        {"Construct": {"punishment": 0.5, "num_ep_to_recover": 5}},
+        {"Construct": {"punishment": 0.5, "num_ep_to_recover": 5, "contribution": contribution}},
         #Exchange resources, industry points by auction.
         {'ContinuousDoubleAuction': {'max_num_orders': 5}},
     ],
@@ -136,7 +136,7 @@ env_config = {
     'agent_names': PROVINCES,
     'agent_locs': [(i, i) for i in range(len(PROVINCES))],
     # Resource points that each agents van get in each time step.
-    'buildUpLimit': {'Agriculture': 10, 'Energy': 10},
+    'buildUpLimit': {'Agriculture': 10000, 'Energy': 10000},
     # Industries available in this world. Their upper limit.
     'industries': {industry: 5000 for industry in INDUSTRIES},
     'industries_chin': INDUSTRIES_CHIN,
@@ -149,7 +149,7 @@ env_config = {
     'industry_weights': dict(zip(PROVINCES, [industry_weights(INDUSTRIES, all_zeros(INDUSTRIES)) for prvn in PROVINCES])),
     'industry_init_dstr': industry_init_dstr,
     # Use inverse reinforcement learning to know rewaed function of each agent.
-    'irl': False,
+    'irl': True,
     'irl_data_path': './data',
 
     # ===== STANDARD ARGUMENTS ======
@@ -203,7 +203,7 @@ trainer_config.update(
         "train_batch_size":  4000,
         "sgd_minibatch_size": 4000,
         "num_gpus": 2,
-        "num_gpus_per_worker": 1,
+        "num_gpus_per_worker": 0.5,
         "num_sgd_iter": 1
     }
 )
@@ -221,7 +221,7 @@ trainer_config.update(
 )
 
 # Initialize Ray
-ray.init(local_mode=True)
+ray.init(local_mode=False)
 
 # Create the PPO trainer.
 trainer = PPOTrainer(
@@ -233,7 +233,7 @@ trainer = PPOTrainer(
 # Since we have to guess 10 times and the optimal reward is 0.0
 # (exact match between observation and action value),
 # we can expect to reach an optimal episode reward of 0.0.
-for i in range(3):
+for i in range(8):
     results = trainer.train()
     print(f"Iter: {i}; avg. reward={results['episode_reward_mean']}")
 
@@ -330,7 +330,7 @@ def generate_rollout_from_current_trainer_policy(
 dense_logs = generate_rollout_from_current_trainer_policy(
     trainer,
     env_obj,
-    num_dense_logs=2
+    num_dense_logs=5
 )
 """
 with open('dense_logs2.pkl', 'wb') as f:
