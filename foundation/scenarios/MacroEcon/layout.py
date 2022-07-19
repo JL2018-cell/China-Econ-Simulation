@@ -1,3 +1,5 @@
+#Do not handle overflow in adding GDP, CO2 to agent state.
+
 import numpy as np
 import copy
 from foundation.base.base_env import BaseEnvironment, scenario_registry
@@ -185,7 +187,17 @@ class MacroEconLayout(BaseEnvironment):
           agent_name = agent.state["name"]
           idx = agent.idx
           # Agriculture and energy industry produce resource points to build other industries
-          self.world.agents[idx].resource_points += self.linear_exp(sum(self.contribution["resource_points"][agent_name].values()))
+          cntrb = copy.copy(self.contribution["resource_points"][agent_name])
+          cntrb.pop("bias")
+          self.world.agents[idx].resource_points += 10 * self.linear_exp(np.dot(np.array(list(agent.state['inventory'].values())), np.array(list(cntrb.values()))))
+          """
+          if np.dot(np.array(list(agent.state['inventory'].values())), np.array(list(cntrb.values()))) < 601:
+              self.world.agents[idx].resource_points += self.linear_exp(np.dot(np.array(list(agent.state['inventory'].values())), np.array(list(cntrb.values()))))
+          else:
+              self.world.agents[idx].resource_points += np.exp(np.dot(np.array(list(agent.state['inventory'].values())), np.array(list(cntrb.values()))))
+          """
+
+          #np.dot(np.array(agent.state['inventory'].values()), np.array(self.contribution["resource_points"][agent_name].values()))
           # Calculate cumulative CO2, GDP produced by each industry in each agent.
           for k, v in agent.action.items():
               this_CO2 = 0
@@ -193,15 +205,26 @@ class MacroEconLayout(BaseEnvironment):
               if v > 0:
                   industry = k.split("_")[-1]
                   try:
-                      this_CO2 += self.contribution["CO2"][agent_name][industry]
+                      this_CO2 += self.contribution["CO2"][agent_name][industry] * agent.state['inventory'][industry]
                   except KeyError:
                       pass
                   try:
-                      this_GDP += self.contribution["GDP"][agent_name][industry]
+                      this_GDP += self.contribution["GDP"][agent_name][industry] * agent.state['inventory'][industry]
                   except KeyError:
                       pass
           self.world.agents[idx].state['endogenous']['CO2'] += self.linear_exp(this_CO2 + self.contribution["CO2"][agent_name]["bias"])
           self.world.agents[idx].state['endogenous']['GDP'] += self.linear_exp(this_GDP + self.contribution["GDP"][agent_name]["bias"])
+          """
+          if (this_CO2 + self.contribution["CO2"][agent_name]["bias"]) > 601:
+              self.world.agents[idx].state['endogenous']['CO2'] += self.linear_exp(this_CO2 + self.contribution["CO2"][agent_name]["bias"])
+          else:
+              self.world.agents[idx].state['endogenous']['CO2'] += np.exp(this_CO2 + self.contribution["CO2"][agent_name]["bias"])
+          if (this_GDP + self.contribution["GDP"][agent_name]["bias"]) > 601:
+              self.world.agents[idx].state['endogenous']['GDP'] += self.linear_exp(this_GDP + self.contribution["GDP"][agent_name]["bias"])
+          else:
+              self.world.agents[idx].state['endogenous']['GDP'] += np.exp(this_GDP + self.contribution["GDP"][agent_name]["bias"])
+          """
+
           # Industry depreciate over time.
           for industry in agent.state['inventory'].keys():
               if agent.state["inventory"][industry] - self.industry_depreciation[agent.state["name"]][industry] > 0:
