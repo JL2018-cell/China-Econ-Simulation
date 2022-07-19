@@ -116,11 +116,11 @@ for metrics, provinces in contribution.items():
         contribution_chg_rate[metrics][province] = {}
         for k, v in attrs.items():
             if metrics == "CO2":
-                contribution_chg_rate[metrics][province][k] = [0.9, 0.3]
+                contribution_chg_rate[metrics][province][k] = [0.7, 0]
             elif metrics == "resource_points":
-                contribution_chg_rate[metrics][province][k] = [1, 0.7]
+                contribution_chg_rate[metrics][province][k] = [1, 0]
             else: # GDP
-                contribution_chg_rate[metrics][province][k] = [1, 0.7]
+                contribution_chg_rate[metrics][province][k] = [1, 0]
 
 env_config = {
     "scenario_name": 'layout/MacroEcon',
@@ -149,7 +149,7 @@ env_config = {
     'industry_weights': dict(zip(PROVINCES, [industry_weights(INDUSTRIES, all_zeros(INDUSTRIES)) for prvn in PROVINCES])),
     'industry_init_dstr': industry_init_dstr,
     # Use inverse reinforcement learning to know rewaed function of each agent.
-    'irl': True,
+    'irl': False,
     'irl_data_path': './data',
 
     # ===== STANDARD ARGUMENTS ======
@@ -202,9 +202,9 @@ trainer_config.update(
         # Other training parameters
         "train_batch_size":  4000,
         "sgd_minibatch_size": 4000,
-        "num_gpus": 2,
-        "num_gpus_per_worker": 0.5,
-        "num_sgd_iter": 1
+        "num_gpus": 0,
+        "num_gpus_per_worker": 0,
+        "num_sgd_iter": 2
     }
 )
 
@@ -221,7 +221,7 @@ trainer_config.update(
 )
 
 # Initialize Ray
-ray.init(local_mode=False)
+ray.init(local_mode=True)
 
 # Create the PPO trainer.
 trainer = PPOTrainer(
@@ -233,10 +233,24 @@ trainer = PPOTrainer(
 # Since we have to guess 10 times and the optimal reward is 0.0
 # (exact match between observation and action value),
 # we can expect to reach an optimal episode reward of 0.0.
-for i in range(8):
+try:
+    f = open("./chkpt_path.txt","r")
+    chkpt_path = f.read().replace("\n", "")
+    print(chkpt_path)
+    f.close()
+    trainer.restore(chkpt_path)
+except:
+    print("No chkpt_path.txt. Train from beginning.")
+
+for i in range(3):
     results = trainer.train()
     print(f"Iter: {i}; avg. reward={results['episode_reward_mean']}")
 
+checkpoint = trainer.save()
+
+f = open("./chkpt_path.txt","w")
+f.write(checkpoint)
+f.close()
 
 # Computing Actions
 env = foundation.make_env_instance(**env_config['env_config_dict'])
