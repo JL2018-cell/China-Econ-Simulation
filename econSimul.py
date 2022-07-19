@@ -16,6 +16,7 @@ import pickle
 DATA_PATH = "./data"
 PROVINCES = ["GuangDong", "HeBei", "XinJiang", "AnHui", "ZheJiang", "SiChuan", "FuJian", "HuBei", "JiangSu", "ShanDong", "HuNan", "HeNan", "ShanXi"]
 INDUSTRIES = ['Agriculture', 'Energy', 'Finance', 'IT', 'Minerals', 'Tourism', 'Manufacturing', 'Construction', 'Transport', 'Retail', 'Education']
+INDUSTRIES_CHIN = ["农林牧渔业", "电力、热力、燃气及水生产和供应业", "金融业", "信息传输、软件和信息技术服务业",  "采矿业", "住宿和餐饮业", "制造业", "建筑业", "交通运输、仓储和邮政业", "批发和零售业", "教育业"]
 
 def all_ones(x):
     return [1 for _ in x]
@@ -26,7 +27,18 @@ def empty_dicts(x):
 def industry_weights(industries, weights):
     return dict(zip(industries, weights))
 
-industry_init_dstr, contribution = obtain_data(DATA_PATH)
+CO2_series, GDP_series, industry_dstr, industry_init_dstr, contribution = obtain_data(DATA_PATH)
+
+growth = 0.2
+sd = 1
+
+contribution_chg_rate = {}
+for metrics, provinces in contribution.items():
+    contribution_chg_rate[metrics] = {}
+    for province, attrs in provinces.items():
+        contribution_chg_rate[metrics][province] = {}
+        for k, v in attrs.items():
+            contribution_chg_rate[metrics][province][k] = [growth, sd]
 
 env_config = {
     'scenario_name': 'layout/MacroEcon',
@@ -39,13 +51,13 @@ env_config = {
     'allow_observation_scaling': False,
     # Upper limit of industries that localGov can build per timestep.
     'buildUpLimit': {'Agriculture': 10, 'Energy': 10},
-    'episode_length': 2, # Number of timesteps per episode
+    'episode_length': 10, # Number of timesteps per episode
     'flatten_observations': False,
     'flatten_masks': False,
 
     'components': [
         #Build industries
-        {"Construct": {"punishment": 0.5, "num_ep_to_recover": 5}},
+        {"Construct": {"punishment": 0.5, "num_ep_to_recover": 5, "contribution": contribution}},
         #Exchange resources, industry points by auction.
         {'ContinuousDoubleAuction': {'max_num_orders': 5}},
     ],
@@ -53,20 +65,19 @@ env_config = {
     # Industries available in this world.
     # Help to define upper limit fo industries development,
     'industries': {industry: 2000 for industry in INDUSTRIES},
+    'industries_chin': INDUSTRIES_CHIN,
 
     # (optional) kwargs of the chosen scenario class
     'starting_agent_resources': {"Food": 10., "Energy": 10.}, #food, energy
-    #'contribution': {"GDP": dict(zip(PROVINCES, dict(zip(INDUSTRIES, ALL_ONES)))),
-    #                 "CO2": dict(zip(PROVINCES, dict(zip(INDUSTRIES, ALL_ONES)))),
-    #                 "resource_points": dict(zip(PROVINCES, dict(zip(INDUSTRIES, ALL_ONES))))},
-    #'contribution': {"GDP": dict(zip(PROVINCES, empty_dicts(PROVINCES))),
-    #                 "CO2": dict(zip(PROVINCES, empty_dicts(PROVINCES))),
-    #                 "resource_points": dict(zip(PROVINCES, empty_dicts(PROVINCES)))},
     'contribution': contribution,
+    'contribution_chg_rate': contribution_chg_rate,
     'industry_depreciation': dict(zip(PROVINCES, [industry_weights(INDUSTRIES, all_ones(INDUSTRIES)) for prvn in PROVINCES])),
     'industry_weights': dict(zip(PROVINCES, [industry_weights(INDUSTRIES, all_ones(INDUSTRIES)) for prvn in PROVINCES])),
     'industry_init_dstr': industry_init_dstr,
-    'dense_log_frequency': 1
+    'dense_log_frequency': 1,
+    # Use inverse reinforcement learning to know rewaed function of each agent.
+    'irl': True,
+    'irl_data_path': './data',
 }
 
 #for obj in env_config['contribution'].keys():
