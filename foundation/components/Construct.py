@@ -1,3 +1,5 @@
+#Handle overflow
+
 from foundation.base.base_component import (
     BaseComponent,
     component_registry,
@@ -30,21 +32,6 @@ class Construct(BaseComponent):
         else:
             return np.exp(x)
 
-    def non_negv_log(self, x):
-        if x > 1:
-            return np.log(x)
-        else:
-            return 0
-
-    def shock(self, x):
-        if x < 10:
-            return np.random.randint(5, 10 + 1)
-        else:
-            try:
-                return np.random.randint(int(x**0.5), int(x))
-            except ValueError:
-                return np.random.randint(int(x**0.5) // 2, int(x**0.5))
-
     def component_step(self):
         world = self.world
         build = []
@@ -72,7 +59,8 @@ class Construct(BaseComponent):
                                 self.world.agents[agent.idx].industry_weights[target_industry] = new_weight
                             else:
                                 self.world.agents[agent.idx].industry_weights[target_industry] = 0.
-                        #self.world.agents[agent.idx].state['endogenous']['CO2'] += self.linear_exp(self.contribution["CO2"][agent.state['name']]["Construction"] + self.contribution["CO2"][agent.state['name']]["bias"])
+                            #self.world.agents[agent.idx].state['endogenous']['GDP'] += self.linear_exp(self.contribution["GDP"][agent.state['name']][target_industry])
+                        self.world.agents[agent.idx].state['endogenous']['CO2'] += self.linear_exp(self.contribution["CO2"][agent.state['name']]["Construction"] + self.contribution["CO2"][agent.state['name']]["bias"])
                     elif "build_" in action:
                         target_industry = action.split("_")[-1]
                         # After building industry, resultant resource point allocated on it should not > preference i.e. upper limit.
@@ -89,7 +77,7 @@ class Construct(BaseComponent):
                             new_weight = self.world.agents[agent.idx].industry_weights[target_industry] - self.punishment
                             if new_weight > 0:
                                 self.world.agents[agent.idx].industry_weights[target_industry] = new_weight
-                        #self.world.agents[agent.idx].state['endogenous']['GDP'] += self.linear_exp(self.contribution["GDP"][agent.state['name']]["Construction"] + self.contribution["GDP"][agent.state['name']]["bias"])
+                        self.world.agents[agent.idx].state['endogenous']['GDP'] += self.linear_exp(self.contribution["GDP"][agent.state['name']]["Construction"] + self.contribution["GDP"][agent.state['name']]["bias"])
                         #self.world.agents[agent.idx].state['endogenous']['CO2'] += self.linear_exp(self.contribution["CO2"][agent.state['name']]["Construction"] + self.contribution["CO2"][agent.state['name']]["bias"])
 
             # In the next timestep, agent gets resources to build Agriculture and Energy industry.
@@ -181,13 +169,16 @@ class Construct(BaseComponent):
             #return [(entity, 2) for entity in self.required_entities]
             actions = []
             for c in self.required_entities:
-                actions.append(("build_{}".format(c), 2000))
-                actions.append(("break_{}".format(c), 2000))
+                actions.append(("build_{}".format(c), 500))
+                actions.append(("break_{}".format(c), 500))
             return actions
         if agent_cls_name == "centralGov":
             charges = []
             for c in self.required_entities:
-                charges.append(("charge_{}".format(c), 2000))
-                charges.append(("release_{}".format(c), 2000))
+                charges.append(("charge_{}".format(c), 500))
+                charges.append(("release_{}".format(c), 500))
             return charges
         return None
+
+
+
