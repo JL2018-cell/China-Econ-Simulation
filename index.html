@@ -1,1 +1,179 @@
-<h1> Hello! </h1>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>China Economic Simulation 2022</title>
+</head>
+
+<style>
+  .coverpage {
+      background-image: url(China.jpg);
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      background-size: cover;
+  }
+  .girl {
+      background-image: url(girl.png);
+  }
+  .title {
+      height: 200px;
+      width: 100%;
+      text-align: center;
+      vertical-align: middle;
+  }
+  .middle {
+      vertical-align: middle;
+  }
+  .navbar {
+      height: 100px;
+      width: 100%;
+      text-align: center;
+      font-size: 3vw;
+      background-color: rgba(0,0,0,.5);
+  }
+  table, th, td {
+      padding: 5px;
+  }
+  tr:nth-child(even) {background-color: #f2f2f2;}
+  td:hover {background-color: rgba(255, 187, 119, 1);}
+  .center {
+      margin-left: auto;
+      margin-right: auto;
+  }
+  a:link {
+      color: rgba(255, 255, 0, 1);
+  }
+  p {
+      margin: 30px;
+      font-size: 30px;
+  }
+  h2 {
+      font-size: 60px;
+  }
+</style>
+  
+<body>
+  
+  <div class = "coverpage">
+    <h1 style="color:white; top: 50%; font-size: 6vw;" class = "title"> <br> China Economic Simulation 2022 </h1>
+    <div class="navbar">
+      <a class="active" href="#introduction">Introduction</a>
+      <a href="#team"">Team</a>
+      <a href="#schedule">Schedule</a>
+      <a href="#method">Method</a>
+      <a href="#discoveries">Discoveries</a>
+      <a href="#result">Result Visualization</a>
+    </div>
+    <div id = "introduction" style="background-color: rgba(255, 255, 255, 0.9);">
+    <h2> Introduction </h2>
+      <p>China demonstrated its astonishing economic growth rate in the past 30 years, which contributed to 2nd largest economy in the world. However, such economic development emphasizes on exports, foreign investment, low value-added industries, etc. which causes problems like environmental pollution and imbalanced development between coastal and internal regions (Zoellick, R., 2012). Even worse, demand of China's goods is falling due to the pandemic and US hostility. Certainly, it is necessary to propose a new development style. For example, exploring potential of domestic economy. This helps China to reduce reliance on external economy performance. </p>
+      <p>Sustainable economic development needs more than GDP growth; they will also need efficient energy production that reduce environmental pollution.  </p>
+      <p>A simulation model is constructed in this project. It help us to understand the dynamics of different provinces cooperating together under the coordination of central government to allocate of resources e.g. coal, technology and edges of different provinces to achieve optimal technology transfer policy. Then, we can find the changes of jobs, technology required by different provinces in the following 10 years. </p>
+      <p>The simulation result offers insights to policymakers and industry leaders by listing and explaining critical parameters of economic performance and economic phenomena that are consistent with daily life observation. </p>
+      <p> </p>
+      <p> </p>
+    </div>
+  </div>
+
+  <div id = "demo">
+    <p id = "paragh"> </p>
+  </div>
+
+  <div id = "team" style="background-color:rgba(252, 135, 243, 0.1);">
+  <h2> Team </h2>
+    <table class = "center">
+      <tr>
+        <td> <img src = 'jlin.jpg' width = "250" height = "350"> </img> </td>
+        <td> <img src = 'jpan.jpg' width = "250" height = "350"> </img> </td>
+      </tr>
+      <tr>
+        <th style="background-color: rgba(153, 217, 234, 0.3);"> <p style="font-size:30px;"> Lin Jianan </p> <p> (Developer) </p> </th>
+        <th style="background-color: rgba(153, 217, 234, 0.3);"> <p style="font-size:30px;"> Dr. Pan Jia </p> <p> (Supervisor) </p> </th>
+      </tr>
+    </table>
+  <p> </p>
+  <p> </p>
+  </div>
+
+  <div id = "schedule" style="font-size:30px;background-color:rgba(252, 135, 243, 0.1);">
+  <h2> Schedule </h2>
+    <table class="center">
+      <tr>
+        <th style = "background-color: #04AA6D; color: white;"> Time </th>
+        <th style = "background-color: #04AA6D; color: white;"> Task </th>
+      </tr> 
+      <tr>
+        <td>
+          Feb ~ May, 2022
+        </td>
+        <td>
+          <li> Prototyping. </li>
+          <li> Build Basic component of model. </li>
+        </td>
+      <tr>
+        <td>
+          June, 2022
+        </td>
+        <td>
+          <li> Fit model into rllib. </li>
+          <li> Implement inverse Reinforcement Learning algorithm. </li>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          1 ~ 20 Jul, 2022
+        </td>
+        <td>
+          <li> Model Simulation. </li>
+          <li> Build project website. </li>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          25 Jul, 2022
+        </td>
+        <td>
+          <li> Report & presentation. </li>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <div id = "method" style="background-color:rgba(252, 135, 243, 0.1);">
+      <h2> Method </h2>
+      <img src="Model.jpg" width="60%" height="60%" style="margin-left: auto; margin-right: auto; display: block;"> </img>
+      <p> The model uses 2-level Reinforcement Learning framework. In the inner reinforcement learning loop. Local governments learn to achieve maximum utility from building, breaking, selling and buying industry resources. The resources to build indutries come from industries supplying energy and food. In addition, given taxation scheme imposed by central government on trading industry resources and behaviour of other local governments are time variant, the environment variables observed are non-stationary. </p>
+      <p> In the outer reinforcement learning loop, the central government adjusts taxation and subsidy scheme in auctions of trading industry resources to optimize its social objective after observing changes in GDP and CO2 emission of each province. Given agents will change their policy, the planner also faces dynamic environment. </p>
+  </div>
+
+  <div id = "discoveries" style="background-color:rgba(252, 135, 243, 0.1);">
+      <h2> Discoveries </h2>
+  </div>
+  
+  <div id="result" style="background-color:rgba(252, 135, 243, 0.1);">
+      <h2> Result Visualization </h2>
+      <div id="bigCanvas">
+      </div>
+      <script src="https://cdn.jsdelivr.net/npm/chart.js"> </script>
+      <script type="text/javascript" src="result.js"> </script>
+      <script type="text/javascript" src="result-C2.js"> </script>
+      <script type="text/javascript" src="result-C3.js"> </script>
+      <script type="text/javascript" src="result-C4.js"> </script>
+      <script type="text/javascript" src="result-C5.js"> </script>
+      <script type="text/javascript" src="result-C6.js"> </script>
+      <script type="text/javascript" src="result-C7.js"> </script>
+      <script type="text/javascript" src="result-C8.js"> </script>
+      <script type="text/javascript" src="result-C9.js"> </script>
+      <script type="text/javascript" src="result-C10.js"> </script>
+      <script type="text/javascript" src="result-C11.js"> </script>
+      <script type="text/javascript" src="result-C12.js"> </script>
+      <script type="text/javascript" src="result-C13.js"> </script>
+      <script type="text/javascript" src="result-C14.js"> </script>
+      <script type="text/javascript" src="result-C15.js"> </script>
+      <script type="text/javascript" src="result-C16.js"> </script>
+      <script type="text/javascript" src="result-C17.js"> </script>
+      <script type="text/javascript" src="proc_data.js"> </script>
+  </div>
+ 
+</body>
+</html>
