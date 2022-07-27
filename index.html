@@ -142,12 +142,62 @@
   <div id = "method" style="background-color:rgba(252, 135, 243, 0.1);">
       <h2> Method </h2>
       <img src="Model.jpg" width="60%" height="60%" style="margin-left: auto; margin-right: auto; display: block;"> </img>
-      <p> The model uses 2-level Reinforcement Learning framework. In the inner reinforcement learning loop. Local governments learn to achieve maximum utility from building, breaking, selling and buying industry resources. The resources to build indutries come from industries supplying energy and food. In addition, given taxation scheme imposed by central government on trading industry resources and behaviour of other local governments are time variant, the environment variables observed are non-stationary. </p>
+      <p> The model uses 2-level Reinforcement Learning framework. </p>
+      <p> In the inner reinforcement learning loop. Local governments learn to achieve maximum utility from building, breaking, selling and buying industry resources. The resources to build indutries come from industries supplying energy and food. In addition, given taxation scheme imposed by central government on trading industry resources and behaviour of other local governments are time variant, the environment variables observed are non-stationary. </p>
       <p> In the outer reinforcement learning loop, the central government adjusts taxation and subsidy scheme in auctions of trading industry resources to optimize its social objective after observing changes in GDP and CO2 emission of each province. Given agents will change their policy, the planner also faces dynamic environment. </p>
+      <p> Custom utility functions of local government and central gobernments are defined as: GDP production - carbon emission. </p>
   </div>
 
   <div id = "discoveries" style="background-color:rgba(252, 135, 243, 0.1);">
       <h2> Discoveries </h2>
+        <ul> 
+          <li> Balanced industry development with agriculture, energy industries as main components. </li>
+            <ul>
+              <li> Matches with Dual circulation and industry self-sufficiency, and providing more career choices. </li>
+            </ul>
+          <li> GDP development can be as high as >50% per year. </li>
+            <ul>
+              <li> There are other concerns for government. For example, budget deficit, bubbles, public health that causes less development or suspension of economic activities. </li>
+            </ul>
+          <li> Carbon emission steadily increases. </li>
+            <ul>
+              <li> Governments in the model think that carbon emission can be offset by economic development. As long as GDP is growing, increase in carbon emission is not a concern. </li>
+            </ul>
+          <li> Important Parameters </li>
+            <ul>
+              <li> Carbon emission </li>
+                <ul> 
+                  <li> increases by: </li>
+                  <ul> 
+                    <li> GDP production efficiency, Carbon emission rate, Custom Reward function. </li>
+                  </ul> 
+                </ul> 
+                <ul> 
+                  <li> decreases by: </li>
+                  <ul> 
+                    <li> Depreciation. </li>
+                  </ul> 
+                </ul> 
+            </ul>
+            <ul>
+              <li> GDP Production </li>
+                <ul> 
+                  <li> increases by: </li>
+                  <ul> 
+                    <li> GDP production efficiency. </li>
+                  </ul> 
+                </ul> 
+            </ul>
+            <ul>
+              <li> Industry Composition </li>
+                <ul> 
+                  <li> promotes primary industry development by: </li>
+                  <ul> 
+                    <li> Depreciation. </li>
+                  </ul> 
+                </ul> 
+            </ul>
+        </ul>
   </div>
   
   <div id="result" style="background-color:rgba(252, 135, 243, 0.1);">
