@@ -88,10 +88,6 @@ class BaseAgent:
         else:
             for entity_name in resources:
                 self.inventory[entity_name] = 0
-            #self.escrow[entity_name] = 0
-        #self.escrow['resource_points'] = 0
-        #for k, v in self.buildUpLimit.items():
-        #    self.escrow[k] = 0
         self._registered_inventory = True
 
     def register_escrow(self):
@@ -329,9 +325,6 @@ class BaseAgent:
                 print("resource_point < 0")
             if amount <= 0:
                 break
-        #transferred += float(np.minimum(self.state["inventory"][resource], amount))
-        #self.state["inventory"][resource] -= transferred
-        #self.state["escrow"][resource] += transferred
         return float(transferred)
 
     def escrow_to_inventory(self, resource, amount):
