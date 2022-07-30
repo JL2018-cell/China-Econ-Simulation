@@ -87,22 +87,6 @@ env = foundation.make_env_instance(**env_config)
 
 obs = env.reset()
 
-"""
-def sample_random_action(agent, mask):
-    #Sample random UNMASKED action(s) for agent.
-    # Return a list of actions: 1 for each action subspace
-    if agent.multi_action_mode:
-        actions = {k: [1 if random.random() > 0.5 else 0 for elm in v] for k, v in mask.items()}
-        actions = agent.check_actions(actions, reset = False)
-        split_masks = np.split(mask, agent.action_spaces.cumsum()[:-1])
-        return [np.random.choice(np.arange(len(m_)), p=m_/m_.sum()) for m_ in split_masks]
-
-    # Return a single action
-    else:
-        return np.random.choice(np.arange(agent.action_spaces), p=mask/mask.sum())
-"""
-
-
 def sample_random_action(agent, mask):
     """Sample random UNMASKED action(s) for agent."""
 
@@ -167,60 +151,4 @@ with open('dense_logs_random.pkl', 'wb') as f:
     pickle.dump(dense_logs, f)
 print("Save dense logs in dense_logs_random.pkl")
 
-"""
-#Plot graph
-#Show location of agents
-xs = [x for x, y in env_config['agent_locs']]
-ys = [y for x, y in env_config['agent_locs']]
 
-#Plot Geographical location of agents
-fig, ax = plt.subplots()
-ax.scatter(xs, ys)
-for i, agent_name in enumerate(env_config['agent_names']):
-    ax.annotate(agent_name, (xs[i], ys[i]))
-#Pie chart of industry distribution for each agent: plt.pie(obs['0']['world-industries'].values(), labels = obs['0']['world-industries'].keys())
-#plt.plot(xs, ys, "ro")
-plt.show()
-
-#Plot industry distribution
-fig, axs = plt.subplots(2, env_config['n_agents'] // 2 + env_config['n_agents'] % 2)
-for i, agent_idx in enumerate(obs.keys()):
-    #obs[agent_idx]['world-industries']
-    if agent_idx != 'p':
-        axs[i // 2][i % 2].pie(obs[agent_idx]['world-industries'].values(), labels = obs['0']['world-industries'].keys())
-plt.show()
-
-#Plot actions taken.
-fig, axs = plt.subplots(2, env_config['n_agents'] // 2 + env_config['n_agents'] % 2)
-for i, agent_idx in enumerate(obs.keys()):
-    if agent_idx != 'p':
-        axs[i // 2][i % 2].hist(obs[agent_idx]['world-actions'])
-plt.show()
-
-"""
-
-"""
-#Histogram
-for agent in obs.keys():
-    plt.hist(obs[agent]['world-actions'])
-    plt.show()
-    plt.hist(obs[agent]['world-industries'])
-    plt.show()
-
-
-#Not useful
-def sample_random_actions(env, obs):
-    #Samples random UNMASKED actions for each agent in obs.
-        
-    actions = {
-        a_idx: sample_random_action(env.get_agent(a_idx), a_obs['action_mask'])
-        for a_idx, a_obs in obs.items()
-    }
-
-    return actions
-
-actions = sample_random_actions(env, obs)
-
-obs, rew, done, info = env.step(actions)
-
-"""
