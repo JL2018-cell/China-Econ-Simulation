@@ -1,5 +1,3 @@
-#Do not handle overflow in adding GDP, CO2 to agent state.
-
 import numpy as np
 import copy
 from foundation.base.base_env import BaseEnvironment, scenario_registry
@@ -12,18 +10,10 @@ import pandas as pd
 
 @scenario_registry.add
 class MacroEconLayout(BaseEnvironment):
-  """
-  Map of China.
-  """
+
   name = "layout/MacroEcon"
   
-  """
-  Industries
-  """
-  
   agent_subclasses = ["LocalGov", "CentralGov"]
-  # required_industries = ['Agriculture', 'Energy', 'Finance', 'IT', 'Minerals', 'Tourism']
-  # required_entities = required_industries
 
   def __init__(self, starting_agent_resources, contribution, industries, industries_chin, industry_depreciation, irl, irl_data_path, contribution_chg_rate, **kwargs):
       self.required_entities = list(industries.keys())
@@ -32,20 +22,23 @@ class MacroEconLayout(BaseEnvironment):
       self.industry_depreciation = industry_depreciation
       # Total CO2 emission of all localGov.
       self.total_CO2 = 0.
+      # Bool, use Inverse Reinforcement Learning or not
       self.irl = irl
+      # Directory of storing Inverse Reinforcement Learning result.
       self.irl_data_path = irl_data_path
+      # Parameters of model
+      self.contribution_chg_rate = contribution_chg_rate
+      # GDP, carbon emission, resource point contribution from each industry.
+      self.contribution = contribution
+      # Resource point allocated to build agriculture, energy industries each year.
+      self.buildUpLimit = kwargs['buildUpLimit']
+      # The following are unimportant variables. Ignoring them does not affect understanding logic of model.
       self.world_size = [100, 100]
       self.energy_cost = 100
       self.expn_per_day = 100
       self.pt_per_day = 100
       self.toCarbonEffcy = 0.5
       self.toGDPEffcy = 0.5
-      self.contribution_chg_rate = contribution_chg_rate
-      self.contribution = contribution
-      self.buildUpLimit = kwargs['buildUpLimit']
-      #self.resourcePt_contrib = contribution["resource_points"]
-      #self.GDP_contrib = contribution["GDP"]
-      #self.CO2_contrib = contribution["CO2"]
       self.agric = starting_agent_resources["Food"]
       self.energy = starting_agent_resources["Energy"]
       self.resource_points = 100.
@@ -74,20 +67,8 @@ class MacroEconLayout(BaseEnvironment):
           else:
               raise ValueError("Upper limit of building industries shoud have type List or int.")
 
+  # Match state of agent to result of inverse reinforcement learning.
   def state_point_to_index(self, state):
-      """
-      Convert a state coordinate to the index representing it.
-
-      Note:
-          Does not check if coordinates lie outside of the world.
-
-      Args:
-          state: Tuple of integers representing the state.
-
-      Returns:
-          The index as integer representing the same state as the given
-          coordinate.
-      """
       state = list(state)
       state.reverse()
       index = 0
@@ -117,10 +98,8 @@ class MacroEconLayout(BaseEnvironment):
       else:
           rewards = {}
           for agent in self.world.agents:
-              #rewards[agent.idx] = sum(agent.industry_weights.values()) * agent.state['endogenous']['GDP'] - agent.state['endogenous']['CO2']
               rewards[agent.idx] = agent.state['endogenous']['GDP'] - agent.state['endogenous']['CO2']
           rewards[self.world.planner.idx] = self.total_GDP - self.total_CO2
-          #print("In layout, rewards:", rewards)
           return rewards
 
   def generate_observations(self):
@@ -176,6 +155,7 @@ class MacroEconLayout(BaseEnvironment):
       self.contribution = copy.copy(self.backup["contribution"])
       self.buildUpLimit = copy.copy(self.backup["buildUpLimit"])
 
+  # Prevent exponential growth that causes overflow.
   def linear_exp(self, x):
       if x > 0:
           return x
@@ -189,15 +169,8 @@ class MacroEconLayout(BaseEnvironment):
           # Agriculture and energy industry produce resource points to build other industries
           cntrb = copy.copy(self.contribution["resource_points"][agent_name])
           cntrb.pop("bias")
-          self.world.agents[idx].resource_points += 10 * self.linear_exp(np.dot(np.array(list(agent.state['inventory'].values())), np.array(list(cntrb.values()))))
-          """
-          if np.dot(np.array(list(agent.state['inventory'].values())), np.array(list(cntrb.values()))) < 601:
-              self.world.agents[idx].resource_points += self.linear_exp(np.dot(np.array(list(agent.state['inventory'].values())), np.array(list(cntrb.values()))))
-          else:
-              self.world.agents[idx].resource_points += np.exp(np.dot(np.array(list(agent.state['inventory'].values())), np.array(list(cntrb.values()))))
-          """
+          self.world.agents[idx].resource_points += self.linear_exp(np.dot(np.array(list(agent.state['inventory'].values())), np.array(list(cntrb.values()))))
 
-          #np.dot(np.array(agent.state['inventory'].values()), np.array(self.contribution["resource_points"][agent_name].values()))
           # Calculate cumulative CO2, GDP produced by each industry in each agent.
           for k, v in agent.action.items():
               this_CO2 = 0
@@ -214,24 +187,12 @@ class MacroEconLayout(BaseEnvironment):
                       pass
           self.world.agents[idx].state['endogenous']['CO2'] += self.linear_exp(this_CO2 + self.contribution["CO2"][agent_name]["bias"])
           self.world.agents[idx].state['endogenous']['GDP'] += self.linear_exp(this_GDP + self.contribution["GDP"][agent_name]["bias"])
-          """
-          if (this_CO2 + self.contribution["CO2"][agent_name]["bias"]) > 601:
-              self.world.agents[idx].state['endogenous']['CO2'] += self.linear_exp(this_CO2 + self.contribution["CO2"][agent_name]["bias"])
-          else:
-              self.world.agents[idx].state['endogenous']['CO2'] += np.exp(this_CO2 + self.contribution["CO2"][agent_name]["bias"])
-          if (this_GDP + self.contribution["GDP"][agent_name]["bias"]) > 601:
-              self.world.agents[idx].state['endogenous']['GDP'] += self.linear_exp(this_GDP + self.contribution["GDP"][agent_name]["bias"])
-          else:
-              self.world.agents[idx].state['endogenous']['GDP'] += np.exp(this_GDP + self.contribution["GDP"][agent_name]["bias"])
-          """
 
           # Industry depreciate over time.
           for industry in agent.state['inventory'].keys():
-              if agent.state["inventory"][industry] - self.industry_depreciation[agent.state["name"]][industry] > 0:
-                  self.world.agents[idx].state['inventory'][industry] -= self.industry_depreciation[agent.state["name"]][industry]
-              else:
-                  self.world.agents[idx].state['inventory'][industry] = 0
+              self.world.agents[idx].state['inventory'][industry] *= self.industry_depreciation[agent.state["name"]][industry]
 
+      # Calculate cumulative GDP, carbon emission.
       self.total_CO2 += sum([agent.state['endogenous']['CO2'] for agent in self.world.agents])
       self.total_GDP += sum([agent.state['endogenous']['GDP'] for agent in self.world.agents])
       self.agric += 1.
