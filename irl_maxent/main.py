@@ -1,12 +1,10 @@
 from obtain_data import obtain_data, industry_dstr_over_time
-#from obtain_data import industry_dstr_over_time as all_industry_dstr_over_time
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from itertools import product               # Cartesian product for iterators
 import math
 import random
-import pdb
 
 # allow us to re-use the framework from the src directory
 import sys, os
@@ -88,7 +86,7 @@ def compute_expected_svf(p_transition, p_initial, terminal, reward, eps=1e-5):
     zs[terminal] = 1.0
 
     # k = sampling size
-    k = 1
+    k = 10
     # 2. perform backward pass
     # longest trajectory: n_states
     for _ in random.sample(range(2 * n_states), k = k):
@@ -101,12 +99,6 @@ def compute_expected_svf(p_transition, p_initial, terminal, reward, eps=1e-5):
             # sum over s_to
             for s_to in random.sample(range(n_states), k = k):
                 za[s_from, a] += safe_mult(p_transition.p_trans(s_from, s_to, a), np.exp(reward[s_from])) * zs[s_to]
-                if np.any(np.isnan(za)):
-                    print("Alert! za nan.")
-                    pdb.set_trace()
-                if np.any(np.isnan(zs)):
-                    print("Alert! zs nan.")
-                    pdb.set_trace()
         
         # sum over all actions
         zs = za.sum(axis=1)
@@ -114,9 +106,6 @@ def compute_expected_svf(p_transition, p_initial, terminal, reward, eps=1e-5):
     # 3. compute local action probabilities
     p_action = za / zs[:, None]
     np.nan_to_num(p_action, 0, 0)
-    if np.any(np.isnan(p_action)):
-        print("Alert! p_action nan.")
-        pdb.set_trace()
 
     # Forward Pass
     # 4. initialize with starting probability
@@ -132,10 +121,6 @@ def compute_expected_svf(p_transition, p_initial, terminal, reward, eps=1e-5):
             # sum over nonterminal state-action pairs
             for s_from, a in product(random.sample(nonterminal, k = k), random.sample(range(n_actions), k = k)):
                 d[s_to, t] += d[s_from, t-1] * p_action[s_from, a] * p_transition.p_trans(s_from, s_to, a)
-
-    if np.any(np.isnan(d)):
-        print("Alert! d nan.")
-        pdb.set_trace()
 
     # 6. sum-up frequencies
     return d.sum(axis=1)
@@ -180,15 +165,6 @@ def maxent_irl(world, p_transition, features, terminal, trajectories, optim, ini
 
 def irl_maxent(DATA_PATH, provinces, INDUSTRIES, INDUSTRIES_CHIN, industry_init_dstr, contribution, buildUpLimit, industries_limit):
     from obtain_data import industry_dstr_over_time
-    #DATA_PATH = './data'
-    #industry_init_dstr, contribution = obtain_data(DATA_PATH)
-    #INDUSTRIES_CHIN = ["农林牧渔业", "电力、热力、燃气及水生产和供应业", "金融业", "信息传输、软件和信息技术服务业",  "采矿业", "住宿和餐饮业", "制造业", "建筑业", "交通运输、仓储和邮政业", "批发和零售业", "教育业"]
-    #INDUSTRIES = ['Agriculture', 'Energy', 'Finance', 'IT', 'Minerals', 'Tourism', 'Manufacturing', 'Construction', 'Transport', 'Retail', 'Education']
-    #provinces = list(industry_init_dstr.keys())
-    #buildUpLimit = {'Agriculture': 10, 'Energy': 10}
-    # Industries available in this world. Their upper limit.
-    #industries_limit = {industry: 2000 for industry in INDUSTRIES}
-    # Solution of reward function of each agent
     reward_matrices = {}
 
     for province in provinces: 
@@ -239,6 +215,5 @@ def irl_maxent(DATA_PATH, provinces, INDUSTRIES, INDUSTRIES_CHIN, industry_init_
                 tmp = tmp // 2
 
         reward_matrices[province] = reward_maxent
-        #np.savetxt(province + ".csv", reward_maxent, delimiter=",")
     return reward_matrices
     
