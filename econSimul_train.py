@@ -18,29 +18,34 @@ import pandas as pd
 import copy
 import json
 
+# directory of storing data
 DATA_PATH = "./data"
+
+# list of provinces and industries
 PROVINCES = ["GuangDong", "HeBei", "XinJiang", "AnHui", "ZheJiang", "SiChuan", "FuJian", "HuBei", "JiangSu", "ShanDong", "HuNan", "HeNan", "ShanXi"]
 INDUSTRIES = ['Agriculture', 'Energy', 'Finance', 'IT', 'Minerals', 'Tourism', 'Manufacturing', 'Construction', 'Transport', 'Retail', 'Education']
 INDUSTRIES_CHIN = ["农林牧渔业", "电力、热力、燃气及水生产和供应业", "金融业", "信息传输、软件和信息技术服务业",  "采矿业", "住宿和餐饮业", "制造业", "建筑业", "交通运输、仓储和邮政业", "批发和零售业", "教育业"]
 
-def all_ones(x):
-    return [1 for _ in x]
-
+# Some utility functions
+def all_ones(x, num):
+    return [num for _ in x]
 def all_zeros(x):
-    return [1 for _ in x]
-
+    return [0 for _ in x]
 def random_ones(x):
     return [random.randint(0,1) for _ in x]
-
 def empty_dicts(x):
     return [{} for _ in x]
-
 def industry_weights(industries, weights):
     return dict(zip(industries, weights))
 
+# Compare difference between simulated GDP, carbon emission and historical one.
 def compare_difference(simul, episode_length):
-    hist_CO2, hist_GDP, hist_industry, _, _ = obtain_data(DATA_PATH, "2011年", "2021年")
-    hist = {"GDP": {k: v[::-1] for k, v in hist_GDP.items()}, \
+    try:
+        hist_CO2, hist_GDP, hist_industry, _, _ = obtain_data(DATA_PATH, "2021年", "2030年")
+    except:
+        return {}
+
+    hist = {"GDP": {k: v[::-1] / 1000 for k, v in hist_GDP.items()}, \
             "CO2": {k: v[::-1] for k, v in hist_CO2.items()}, \
             "industry": {k: v[::-1] for k, v in hist_industry.items()}}
 
@@ -87,6 +92,7 @@ def compare_difference(simul, episode_length):
     diff.pop("industry")
     return diff
 
+# Tidy up log recording actions
 def simplify_actions(dense_logs):
     # Every trial
     for tr in dense_logs.keys():
@@ -107,8 +113,10 @@ def simplify_actions(dense_logs):
                 dense_logs[tr]['actions'][ep][agent_idx] = tmp
     return dense_logs
 
-CO2_series, GDP_series, industry_dstr, industry_init_dstr, contribution = obtain_data(DATA_PATH, None, "2011年")
+# Read data.
+CO2_series, GDP_series, industry_dstr, industry_init_dstr, contribution = obtain_data(DATA_PATH, None, "2021年")
 
+# Set up parameters, will be used in env_config later.
 contribution_chg_rate = {}
 for metrics, provinces in contribution.items():
     contribution_chg_rate[metrics] = {}
@@ -116,12 +124,13 @@ for metrics, provinces in contribution.items():
         contribution_chg_rate[metrics][province] = {}
         for k, v in attrs.items():
             if metrics == "CO2":
-                contribution_chg_rate[metrics][province][k] = [0.7, 0]
+                contribution_chg_rate[metrics][province][k] = [1, 0.3]
             elif metrics == "resource_points":
-                contribution_chg_rate[metrics][province][k] = [1, 0]
+                contribution_chg_rate[metrics][province][k] = [1, 0.3]
             else: # GDP
-                contribution_chg_rate[metrics][province][k] = [1, 0]
+                contribution_chg_rate[metrics][province][k] = [0.5, 0.3]
 
+# Setting of model
 env_config = {
     "scenario_name": 'layout/MacroEcon',
 
@@ -144,12 +153,12 @@ env_config = {
     'starting_agent_resources': {"Food": 10., "Energy": 10.}, #food, energy
     'contribution': contribution,
     'contribution_chg_rate': contribution_chg_rate,
-    'industry_depreciation': dict(zip(PROVINCES, [industry_weights(INDUSTRIES, all_zeros(INDUSTRIES)) for prvn in PROVINCES])),
+    'industry_depreciation': dict(zip(PROVINCES, [industry_weights(INDUSTRIES, all_ones(INDUSTRIES, 0.7)) for prvn in PROVINCES])),
     # Involved in reward function.
     'industry_weights': dict(zip(PROVINCES, [industry_weights(INDUSTRIES, all_zeros(INDUSTRIES)) for prvn in PROVINCES])),
     'industry_init_dstr': industry_init_dstr,
     # Use inverse reinforcement learning to know rewaed function of each agent.
-    'irl': False,
+    'irl': 0,
     'irl_data_path': './data',
 
     # ===== STANDARD ARGUMENTS ======
@@ -166,8 +175,8 @@ env_config = {
     'dense_log_frequency': 1,
 }
 
+# Set up reinforcement learning framework.
 env_obj = RLlibEnvWrapper({"env_config_dict": env_config}, verbose=True)
-
 policies = {
     "a": (
         None,  # uses default policy
@@ -202,8 +211,8 @@ trainer_config.update(
         # Other training parameters
         "train_batch_size":  4000,
         "sgd_minibatch_size": 4000,
-        "num_gpus": 0,
-        "num_gpus_per_worker": 0,
+        "num_gpus": 2,
+        "num_gpus_per_worker": 0.5,
         "num_sgd_iter": 2
     }
 )
@@ -221,7 +230,7 @@ trainer_config.update(
 )
 
 # Initialize Ray
-ray.init(local_mode=True)
+ray.init(local_mode=False)
 
 # Create the PPO trainer.
 trainer = PPOTrainer(
@@ -229,10 +238,7 @@ trainer = PPOTrainer(
     config=trainer_config,
     )
 
-# Train for n iterations and report results (mean episode rewards).
-# Since we have to guess 10 times and the optimal reward is 0.0
-# (exact match between observation and action value),
-# we can expect to reach an optimal episode reward of 0.0.
+# Try to read training progress.
 try:
     f = open("./chkpt_path.txt","r")
     chkpt_path = f.read().replace("\n", "")
@@ -242,12 +248,13 @@ try:
 except:
     print("No chkpt_path.txt. Train from beginning.")
 
-for i in range(3):
+# Train for some iterations and report results (mean episode rewards).
+for i in range(30):
     results = trainer.train()
     print(f"Iter: {i}; avg. reward={results['episode_reward_mean']}")
 
+# Save training progress.
 checkpoint = trainer.save()
-
 f = open("./chkpt_path.txt","w")
 f.write(checkpoint)
 f.close()
@@ -272,17 +279,8 @@ while not done["__all__"]:
     actions.clear()
 
 # Get weights of the default local policy
-# trainer.get_policy().get_weights()
-
-# Same as above
 trainer.workers.local_worker().policy_map["a"].get_weights()
 trainer.workers.local_worker().policy_map["p"].get_weights()
-
-# Get list of weights of each worker, including remote replicas
-# trainer.workers.foreach_worker(lambda ev: ev.get_policy().get_weights())
-
-# Same as above
-# trainer.workers.foreach_worker_with_index(lambda ev, i: ev.get_policy().get_weights())
 
 # Below, we fetch the dense logs for each rollout worker and environment within
 dense_logs = {}
@@ -291,17 +289,7 @@ for worker in range((trainer_config["num_workers"] > 0), trainer_config["num_wor
     for env_id in range(trainer_config["num_envs_per_worker"]):                                                                 dense_logs["worker={};env_id={}".format(worker, env_id)] = \
         trainer.workers.foreach_worker(lambda w: w.async_env)[worker].envs[env_id].env.previous_episode_dense_log
 
-# We should have num_workers x num_envs_per_worker number of dense logs
-"""
-import pickle
-with open('dense_logs1.pkl', 'wb') as f:
-    pickle.dump(dense_logs, f)
-print("Save dense_logs1 in dense_logs.pkl")       
-"""
-### 4b. Generate a dense log from the most recent trainer policy model weights
-
-#We may also use the trainer object directly to play out an episode. The advantage of this approach is that we can re-sample the policy model any number of times and generate several rollouts.
-
+# Generate a dense log from the most recent trainer policy model weights
 def generate_rollout_from_current_trainer_policy(
     trainer,
     env_obj,
@@ -341,33 +329,22 @@ def generate_rollout_from_current_trainer_policy(
         dense_logs[idx] = env_obj.env.dense_log
     return dense_logs
 
+# RUj the model after training.
 dense_logs = generate_rollout_from_current_trainer_policy(
     trainer,
     env_obj,
     num_dense_logs=5
 )
-"""
-with open('dense_logs2.pkl', 'wb') as f:
-    pickle.dump(dense_logs, f)
-print("Save dense_logs2 in dense_logs.pkl")
 
-diff = compare_difference(dense_logs, env_config["env_config_dict"]["episode_length"])
-with open('diff.pkl', 'wb') as f:
-    pickle.dump(diff, f)
-print("Save diff in dense_logs2.pkl")
-"""
+# Save logs of running trained model.
 dense_logs = simplify_actions(dense_logs)
 with open("result.json", "w") as f:
-  json.dump(dense_logs, f)
+    json.dump(dense_logs, f)
 print("Save dense_logs2 in result.json")
 diff = compare_difference(dense_logs, env_config["env_config_dict"]["episode_length"])
 with open("diff.json", "w") as f2:
-  json.dump(diff, f2)
+    json.dump(diff, f2)
 print("Save diff in diff.json")
-# plotting utilities for visualizing env. state
-#from utils import plotting  
-#plotting.plotting(dense_logs)
 
-# Shutdown Ray after use
 ray.shutdown()
 
