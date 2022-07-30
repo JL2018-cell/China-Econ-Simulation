@@ -37,6 +37,7 @@ def obtain_data(data_path, time_low_bound = None, time_up_bound = None):
         model = LinearRegression().fit(X, np.apply_along_axis(np.log, 0, y))
         return model.intercept_, model.coef_
 
+    # Make sure permutation of arr (array) is same as target_arr.
     def align(arr, target_arr):
         assert len(arr) == len(target_arr)
         indices = []
@@ -63,7 +64,8 @@ def obtain_data(data_path, time_low_bound = None, time_up_bound = None):
         state = data.loc[target_indices].fillna(method ='backfill', axis = 1)
         industry_init_dstr[province] = dict(zip(INDUSTRIES, state.loc[:, sorted(state.columns)[-1]].to_numpy()))
         industry_dstr[province] = state.dropna(axis = 1, how = 'all').T
-    
+
+    # Caculate remianing data. e.g. pollutants, resource points, GDP.
     for file in files:
         data = pd.read_excel(root + r"/" + file, header = 3, index_col = 0)
         if time_up_bound is not None and time_low_bound is not None:
@@ -74,7 +76,6 @@ def obtain_data(data_path, time_low_bound = None, time_up_bound = None):
             data = data[[col for col in data.columns if col < time_up_bound]]
         [category, province] = file[:file.find(".")].split("_")
         if category.lower() == "sewage":
-            #y = data.fillna(0).sum()
             y = data.fillna(method = 'bfill', axis = 1).fillna(method = 'ffill', axis = 1).fillna(0).sum()
             try:
                 CO2_series[province] += y
@@ -117,6 +118,7 @@ def obtain_data(data_path, time_low_bound = None, time_up_bound = None):
                     contribution["CO2"][province][k] += v
                 except KeyError:
                     contribution["CO2"][province][k] = v
+
         elif category.lower() == "gdp":
             y = data.loc[[index for index in data.index if "地区生产总值" in index][0]]
             GDP_series[province] = y
@@ -125,9 +127,13 @@ def obtain_data(data_path, time_low_bound = None, time_up_bound = None):
             X = X[[[col for col in X.columns if industry in col][0] for industry in INDUSTRIES_CHIN] + ["GDP"]]
             bias, coeff = regression(X.to_numpy()[:, 0 : X.shape[1] - 1], X.to_numpy()[:, -1])
             contribution["GDP"][province] = {**dict(zip(INDUSTRIES, coeff)), **{"bias": bias}}
+
         elif category.lower() == "labour":
             pass
-        else: #Tax_income, deleted "budgeted income" at the first row of raw data.
+
+        # Tax_income, deleted "budgeted income" at the first row of raw data.
+        # Used to calculate resource points.
+        else:
             data = data.fillna(method = "backfill", axis = 1)
             data_in_simul = data.loc[[index for index in data.index if PROVINCES[index] in PROVINCES_in_simul]]
             for i, index in enumerate(data_in_simul.index):
@@ -138,9 +144,10 @@ def obtain_data(data_path, time_low_bound = None, time_up_bound = None):
                 contribution["resource_points"][PROVINCES[index]] = {**dict(zip(INDUSTRIES, coeff)), **{"bias": bias}}
     return (CO2_series, GDP_series, industry_dstr, industry_init_dstr, contribution) 
 
-
+# Return labour distribution of different industries over time.
 def industry_dstr_over_time(data_path, time_low_bound = None, time_up_bound = None):
-    # FInd path of data
+
+    # Find path of data
     root, directory, files = list(os.walk(data_path))[0]
     # Define names of agents.
     INDUSTRIES_CHIN = ["农林牧渔业", "电力、热力、燃气及水生产和供应业", "金融业", "信息传输、软件和信息技术服务业",  "采矿业", "住宿和餐饮业", "制造业", "建筑业", "交通运输、仓储和邮政业", "批发和零售业", "教育业"]
@@ -152,6 +159,7 @@ def industry_dstr_over_time(data_path, time_low_bound = None, time_up_bound = No
     # Change of industry distribution over time.
     industry_dstr = {}
 
+    # Make sure permutation of arr (array) is same as target_arr.
     def align(arr, target_arr):
         assert len(arr) == len(target_arr)
         indices = []
@@ -178,4 +186,5 @@ def industry_dstr_over_time(data_path, time_low_bound = None, time_up_bound = No
         target_indices = align(target_indices, INDUSTRIES_CHIN)
         state = data.loc[target_indices].fillna(method ='backfill', axis = 1)
         industry_dstr[province] = state.dropna(axis = 1, how = 'all').T
+
     return industry_dstr
