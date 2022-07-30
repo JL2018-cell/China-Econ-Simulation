@@ -26,6 +26,7 @@ class Construct(BaseComponent):
         self.num_ep_to_recover = num_ep_to_recover
         self.punishment = punishment
 
+    # Prevent overflow
     def linear_exp(self, x):
         if x > 0:
             return x
@@ -59,8 +60,6 @@ class Construct(BaseComponent):
                                 self.world.agents[agent.idx].industry_weights[target_industry] = new_weight
                             else:
                                 self.world.agents[agent.idx].industry_weights[target_industry] = 0.
-                            #self.world.agents[agent.idx].state['endogenous']['GDP'] += self.linear_exp(self.contribution["GDP"][agent.state['name']][target_industry])
-                        self.world.agents[agent.idx].state['endogenous']['CO2'] += self.linear_exp(self.contribution["CO2"][agent.state['name']]["Construction"] + self.contribution["CO2"][agent.state['name']]["bias"])
                     elif "build_" in action:
                         target_industry = action.split("_")[-1]
                         # After building industry, resultant resource point allocated on it should not > preference i.e. upper limit.
@@ -77,29 +76,17 @@ class Construct(BaseComponent):
                             new_weight = self.world.agents[agent.idx].industry_weights[target_industry] - self.punishment
                             if new_weight > 0:
                                 self.world.agents[agent.idx].industry_weights[target_industry] = new_weight
-                        self.world.agents[agent.idx].state['endogenous']['GDP'] += self.linear_exp(self.contribution["GDP"][agent.state['name']]["Construction"] + self.contribution["GDP"][agent.state['name']]["bias"])
-                        #self.world.agents[agent.idx].state['endogenous']['CO2'] += self.linear_exp(self.contribution["CO2"][agent.state['name']]["Construction"] + self.contribution["CO2"][agent.state['name']]["bias"])
 
             # In the next timestep, agent gets resources to build Agriculture and Energy industry.
             for industry in agent.buildUpLimit.keys():
                 self.world.agents[agent.idx].buildUpLimit[industry] += agent.buildUpIncrm[industry]
 
-            #Each agent has a prefernce list to construct or vreak industry.
+        # Update agent state
         for agent in self.world.agents:
             self.world.agents[agent.idx].state["resource_points"] = agent.resource_points
             self.world.agents[agent.idx].state["buildUpLimit"] = agent.buildUpLimit
-            """
-            action list:
-            ['Construct.build_Agriculture', 'Construct.break_Agriculture', 
-             'Construct.build_Energy', 'Construct.break_Energy', 
-             'Construct.build_Finance', 'Construct.break_Finance', 
-             'Construct.build_IT', 'Construct.break_IT', 
-             'Construct.build_Minerals', 'Construct.break_Minerals', 
-             'Construct.build_Tourism', 'Construct.break_Tourism']
-            """
 
     def generate_masks(self, completions = 0):
-        #Refer to ai_ChinaEcon\foundation\components\continuous_double_auction.py:580
         masks = {}
         for agent in self.world.agents:
             masks[agent.idx] = {}
@@ -129,10 +116,6 @@ class Construct(BaseComponent):
         obs_dict = dict()
         for agent in self.world.agents:
             obs_dict[agent.idx] = {
-                #How much is paid to build industries.
-                #"build_payment": agent.state["build_payment"] / self.payment,
-                #How much resource is generated.
-                #"build_resources": self.sampled_skills[agent.idx],
                 "loc": agent.state["loc"],
                 "Agriculture": np.array(agent.state["inventory"]["Agriculture"]),
                 "Energy": np.array(agent.state["inventory"]["Energy"])
