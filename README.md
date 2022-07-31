@@ -6,6 +6,8 @@
 <h1> Project Website </h1>
 <p> Introduction of the project and result of running simulation model can be seen in the follwoing: </p>
 <p> https://jl2018-cell.github.io/China-Econ-Simulation/ </p>
+<p> You can click the buttons then press "refresh" to see result of different parameters settings. 
+<p> <img src="./utils/ParametersTable.jpg" width = "450" height = "350"> </img> </p>
 
 <h1> Setup </h1>
 <p> Required libraries for this model are: </p>
